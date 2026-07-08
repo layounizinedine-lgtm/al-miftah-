@@ -6,6 +6,7 @@
 <title>المفتاح — Der Schlüssel zur arabischen Sprache</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Noto+Naskh+Arabic:wght@400;500;700&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --ink: #1c1b17;
@@ -275,6 +276,24 @@
   .ex-done h2{ font-family:'Cormorant Garamond', serif; font-weight:600; color: var(--gold-bright); font-size:1.8rem; margin:.5rem 0; }
   .ex-done p{ color: rgba(242,232,208,0.8); margin-bottom: 1.6rem; }
 
+  /* ---------- DAILY CARD ---------- */
+  .daily-card{
+    max-width: 32rem; margin: 1.5rem auto 0; padding: 1.8rem 1.5rem;
+    text-align:center; border:1px solid rgba(201,162,39,0.35); border-radius:10px;
+    background: linear-gradient(160deg, rgba(15,61,61,0.75), rgba(10,43,43,0.75));
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    position:relative;
+  }
+  .daily-card::before{
+    content:"✦"; position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    color: rgba(201,162,39,0.5); font-size:.8rem;
+  }
+  .daily-ar{ font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:1.3rem; color: var(--gold-bright); margin-bottom:.2rem; }
+  .daily-title{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:1.5rem; color:#fdf8ec; }
+  .daily-sub{ font-family:'Lora', serif; font-style:italic; font-size:.95rem; color: rgba(242,232,208,0.75); margin:.5rem 0 1.2rem; }
+  .daily-btn{ font-size:1.1rem; }
+  .daily-stat{ margin-top:1rem; font-family:'Cormorant Garamond', serif; font-size:.9rem; color: rgba(242,232,208,0.6); letter-spacing:.03em; }
+
   /* ---------- WRITING (Schreiben) ---------- */
   .write-wrap{ max-width: 34rem; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; text-align:center; }
   .write-head{ margin-bottom: 1.2rem; }
@@ -301,6 +320,49 @@
   .write-controls{ display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin-top:.4rem; }
   .write-nav{ display:flex; gap:.6rem; justify-content:center; align-items:center; margin-top:1.2rem; }
   .write-counter{ font-family:'Cormorant Garamond', serif; font-style:italic; color: rgba(242,232,208,0.6); min-width:5rem; }
+
+  /* ---------- AUTH ---------- */
+  .auth-sheet{ background: linear-gradient(160deg, rgba(15,61,61,0.6), rgba(10,43,43,0.4)); border:1px solid rgba(201,162,39,0.3); border-radius:12px; padding: 1.5rem 1.4rem 2rem; }
+  .auth-title{ text-align:center; font-family:'Cormorant Garamond', serif; font-weight:600; font-size:1.8rem; color: var(--gold-bright); margin-top:.5rem; }
+  .auth-intro{ text-align:center; font-size:.95rem; color: rgba(242,232,208,0.75); line-height:1.6; margin: .6rem auto 1.5rem; max-width: 24rem; }
+  .auth-field{ margin-bottom: 1rem; }
+  .auth-field label{ display:block; font-family:'Cormorant Garamond', serif; font-size:.95rem; color: var(--gold-bright); margin-bottom:.35rem; letter-spacing:.03em; }
+  .auth-field input{
+    width:100%; padding:.8rem 1rem; border-radius:6px;
+    background: rgba(5,22,22,0.6); border:1px solid rgba(201,162,39,0.3);
+    color:#f2e8d0; font-family:'Lora', serif; font-size:1rem;
+  }
+  .auth-field input:focus{ outline:none; border-color: var(--gold-bright); }
+  .auth-error{ min-height:1.4rem; color: var(--red-soft); font-size:.9rem; text-align:center; margin:.4rem 0; }
+  .auth-submit{ width:100%; margin-top:.4rem; }
+  .auth-submit:disabled{ opacity:.6; }
+  .auth-switch{ text-align:center; margin-top:1.4rem; font-size:.95rem; color: rgba(242,232,208,0.7); }
+  .auth-link{ background:none; border:none; color: var(--gold-bright); font-family:'Cormorant Garamond', serif; font-size:1rem; text-decoration:underline; cursor:pointer; margin-left:.3rem; }
+
+  /* ---------- HARAKAT (Vokalzeichen) ---------- */
+  .harakat-list{ max-width: 40rem; margin: 0 auto; padding: 1rem 1.2rem 2rem; }
+  .haraka-card{
+    display:flex; gap:1.2rem; align-items:center;
+    background: linear-gradient(160deg, rgba(15,61,61,0.8), rgba(10,43,43,0.8));
+    border:1px solid rgba(201,162,39,0.28); border-radius:10px;
+    padding: 1.1rem 1.2rem; margin-bottom: 1rem;
+  }
+  .haraka-glyph{
+    flex:0 0 auto; width:72px; height:72px; display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:2.6rem; color:#fdf8ec;
+    background: rgba(5,22,22,0.5); border:1px solid rgba(201,162,39,0.25); border-radius:8px;
+  }
+  .haraka-body{ flex:1; text-align:left; }
+  .haraka-name{ font-family:'Cormorant Garamond', serif; font-weight:600; font-size:1.25rem; color: var(--gold-bright); }
+  .haraka-ex{ font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:1.5rem; color:#fdf8ec; margin: 0 .4rem; }
+  .haraka-ex-tr{ font-family:'Lora', serif; font-style:italic; color: rgba(242,232,208,0.7); }
+  .haraka-desc{ font-size:.9rem; line-height:1.5; color: rgba(242,232,208,0.8); margin-top:.35rem; }
+  .haraka-hilfe{ font-size:.85rem; color: var(--gold-bright); font-style:italic; margin-top:.4rem; opacity:.9; }
+  .haraka-listen{
+    flex:0 0 auto; background:transparent; border:1px solid rgba(201,162,39,0.4);
+    color: var(--gold-bright); border-radius:50%; width:44px; height:44px; font-size:1rem; cursor:pointer;
+  }
+  .haraka-listen:hover{ background: rgba(201,162,39,0.12); }
 
   /* ---------- FOOTER ---------- */
   .footer{
@@ -369,9 +431,12 @@
   <section id="view-start" class="view">
     <div class="topbar">
       <button class="btn-ghost" onclick="go('intro')">‹ Start</button>
-      <div style="text-align:right;">
-        <h2>المفتاح</h2>
-        <div class="sub">Deine Lernwege</div>
+      <div style="display:flex; align-items:center; gap:.8rem;">
+        <button class="btn-ghost" id="account-btn" onclick="openAuth()">Anmelden</button>
+        <div style="text-align:right;">
+          <h2>المفتاح</h2>
+          <div class="sub" id="account-sub">Nicht angemeldet</div>
+        </div>
       </div>
     </div>
 
@@ -379,6 +444,14 @@
       <div class="kicker">Wähle deinen Weg</div>
       <h1>Die vier Stufen</h1>
       <p>Von den Buchstaben bis zur freien Übersetzung</p>
+    </div>
+
+    <div class="daily-card">
+      <div class="daily-ar">دَرْسُ الْيَوْم</div>
+      <div class="daily-title">Heute lernen</div>
+      <div class="daily-sub" id="daily-sub">— fällige Wiederholungen &amp; neue Buchstaben</div>
+      <button class="btn-gold daily-btn" onclick="startDaily()">Session starten (<span id="daily-count">0</span>)</button>
+      <div class="daily-stat">Im Gedächtnis: <span id="daily-mastered">0 / 28</span></div>
     </div>
 
     <div class="path-section">
@@ -411,14 +484,74 @@
 
     <div style="text-align:center; padding: 0 1.5rem 4rem;">
       <button class="btn-gold" onclick="startExercise()">Buchstaben üben</button>
-      <div style="margin-top:1rem;">
+      <div style="margin-top:1rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">
         <button class="btn-ghost" onclick="startWriting()">✎ Schreiben üben</button>
+        <button class="btn-ghost" onclick="go('harakat')">◌ Vokalzeichen</button>
       </div>
     </div>
 
     <footer class="footer">
       <span class="ar">✦ ٱقْرَأْ ✦</span>
       Lies.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: HARAKAT (Vokalzeichen) ============ -->
+  <section id="view-harakat" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('letters')">‹ Buchstaben</button>
+      <div style="text-align:right;">
+        <h2>الحَرَكات</h2>
+        <div class="sub">Vokalzeichen</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Erste Stufe · Teil 2</div>
+      <h1>Die Vokalzeichen</h1>
+      <p>Kleine Zeichen, die aus Buchstaben Laute machen</p>
+    </div>
+
+    <div class="harakat-list" id="harakat-list"><!-- filled by JS --></div>
+
+    <div style="text-align:center; padding: 0 1.5rem 4rem;">
+      <button class="btn-gold" onclick="startHarakatExercise()">Vokalzeichen üben</button>
+      <div style="margin-top:1rem;">
+        <button class="btn-ghost" onclick="go('woerter')">Weiter: Erste Wörter lesen ›</button>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ بَ بِ بُ ✦</span>
+      Drei Zeichen, drei Klänge.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: WOERTER (Erste Wörter lesen) ============ -->
+  <section id="view-woerter" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('harakat')">‹ Vokalzeichen</button>
+      <div style="text-align:right;">
+        <h2>كَلِمات</h2>
+        <div class="sub">Erste Wörter lesen</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Erste Stufe · Teil 3</div>
+      <h1>Erste Wörter lesen</h1>
+      <p>Hier siehst du Sukun, Schadda &amp; Tanwin in echten Wörtern</p>
+    </div>
+
+    <div class="harakat-list" id="woerter-list"><!-- filled by JS --></div>
+
+    <div style="text-align:center; padding: 0 1.5rem 4rem;">
+      <button class="btn-gold" onclick="startWoerterExercise()">Wörter lesen üben</button>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ مِنَ الْحَرْفِ إِلَى الْكَلِمَة ✦</span>
+      Vom Buchstaben zum Wort.
     </footer>
   </section>
 
@@ -483,9 +616,235 @@
     <div class="sheet" id="letter-detail-sheet"><!-- filled by JS --></div>
   </div>
 
+  <!-- ============ OVERLAY: AUTH (Login / Registrieren) ============ -->
+  <div class="overlay" id="auth-overlay">
+    <div class="sheet auth-sheet">
+      <button class="sheet-close" onclick="closeAuth()" aria-label="Schließen">×</button>
+      <div style="clear:both"></div>
+      <div class="auth-title" id="auth-title">Anmelden</div>
+      <p class="auth-intro" id="auth-intro">Melde dich an, damit dein Fortschritt geräteübergreifend gespeichert wird.</p>
+
+      <div class="auth-field">
+        <label for="auth-email">E-Mail</label>
+        <input id="auth-email" type="email" autocomplete="email" inputmode="email" placeholder="name@beispiel.de">
+      </div>
+      <div class="auth-field">
+        <label for="auth-pass">Passwort</label>
+        <input id="auth-pass" type="password" autocomplete="current-password" placeholder="mindestens 6 Zeichen">
+      </div>
+
+      <div class="auth-error" id="auth-error"></div>
+
+      <button class="btn-gold auth-submit" id="auth-submit" onclick="submitAuth()">Anmelden</button>
+
+      <div class="auth-switch">
+        <span id="auth-switch-text">Noch kein Konto?</span>
+        <button class="auth-link" id="auth-switch-btn" onclick="toggleAuthMode()">Registrieren</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
+/* ============================================================
+   FOUNDATION — Sicherheit (esc), Supabase, Auth, Cloud-Sync
+   ============================================================ */
+
+// --- XSS-Schutz: JEDER dynamische Wert läuft hier durch, bevor er in innerHTML landet ---
+function esc(s){
+  if(s === null || s === undefined) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// --- Supabase-Konfiguration (anon/publishable key ist bewusst öffentlich) ---
+var SUPABASE_URL = 'https://tbvonsklczjrtgfckptn.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_G6wG6xW5ZwgY8ithsXE63Q_FRXrBoYi';
+var supa = null;
+var currentUser = null;        // { id, email }
+var authMode = 'login';        // 'login' | 'signup'
+var authBusy = false;
+var lastSyncAt = 0;            // Zeitstempel des letzten erfolgreichen Syncs
+var pendingSync = false;       // true, wenn ein Upload offline scheiterte
+
+function initSupabase(){
+  try {
+    if(window.supabase && window.supabase.createClient){
+      supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // bestehende Sitzung wiederherstellen
+      supa.auth.getSession().then(function(res){
+        if(res && res.data && res.data.session){
+          currentUser = { id: res.data.session.user.id, email: res.data.session.user.email };
+          onLoggedIn();
+        }
+        updateAccountUI();
+      });
+      supa.auth.onAuthStateChange(function(_evt, session){
+        currentUser = session ? { id: session.user.id, email: session.user.email } : null;
+        updateAccountUI();
+      });
+    }
+  } catch(e){ /* offline oder Lib nicht geladen — App läuft lokal weiter */ }
+}
+
+/* ---------- Auth-UI ---------- */
+function openAuth(){
+  if(currentUser){
+    // eingeloggt → Abmelden anbieten
+    if(confirm('Als ' + currentUser.email + ' angemeldet.\nMöchtest du dich abmelden?')){ logout(); }
+    return;
+  }
+  document.getElementById('auth-overlay').classList.add('active');
+  setAuthError('');
+}
+function closeAuth(){ document.getElementById('auth-overlay').classList.remove('active'); }
+function toggleAuthMode(){
+  authMode = (authMode === 'login') ? 'signup' : 'login';
+  document.getElementById('auth-title').textContent = (authMode==='login') ? 'Anmelden' : 'Registrieren';
+  document.getElementById('auth-submit').textContent = (authMode==='login') ? 'Anmelden' : 'Konto erstellen';
+  document.getElementById('auth-switch-text').textContent = (authMode==='login') ? 'Noch kein Konto?' : 'Schon ein Konto?';
+  document.getElementById('auth-switch-btn').textContent = (authMode==='login') ? 'Registrieren' : 'Anmelden';
+  document.getElementById('auth-intro').textContent = (authMode==='login')
+    ? 'Melde dich an, damit dein Fortschritt geräteübergreifend gespeichert wird.'
+    : 'Erstelle ein Konto, damit dein Fortschritt sicher in der Cloud liegt.';
+  setAuthError('');
+}
+function setAuthError(msg){ document.getElementById('auth-error').textContent = msg || ''; }
+
+function submitAuth(){
+  if(authBusy) return;
+  if(!supa){ setAuthError('Keine Verbindung zum Server. Bist du online?'); return; }
+  var email = document.getElementById('auth-email').value.trim();
+  var pass = document.getElementById('auth-pass').value;
+  if(!email || !pass){ setAuthError('Bitte E-Mail und Passwort eingeben.'); return; }
+  if(pass.length < 6){ setAuthError('Das Passwort braucht mindestens 6 Zeichen.'); return; }
+
+  authBusy = true;
+  var btn = document.getElementById('auth-submit');
+  btn.disabled = true; btn.textContent = 'Moment…';
+
+  var op = (authMode === 'login')
+    ? supa.auth.signInWithPassword({ email: email, password: pass })
+    : supa.auth.signUp({ email: email, password: pass });
+
+  op.then(function(res){
+    authBusy = false; btn.disabled = false;
+    btn.textContent = (authMode==='login') ? 'Anmelden' : 'Konto erstellen';
+    if(res.error){ setAuthError(uebersetzeAuthFehler(res.error.message)); return; }
+    if(authMode === 'signup' && res.data && res.data.user && !res.data.session){
+      setAuthError('Fast fertig! Bitte bestätige deine E-Mail und melde dich dann an.');
+      authMode = 'login';
+      return;
+    }
+    if(res.data && res.data.user){
+      currentUser = { id: res.data.user.id, email: res.data.user.email };
+      closeAuth();
+      onLoggedIn();
+      updateAccountUI();
+    }
+  }, function(){
+    authBusy = false; btn.disabled = false;
+    btn.textContent = (authMode==='login') ? 'Anmelden' : 'Konto erstellen';
+    setAuthError('Etwas ist schiefgelaufen. Versuch es nochmal.');
+  });
+}
+
+function uebersetzeAuthFehler(msg){
+  msg = (msg || '').toLowerCase();
+  if(msg.indexOf('invalid login') >= 0) return 'E-Mail oder Passwort stimmt nicht.';
+  if(msg.indexOf('already registered') >= 0 || msg.indexOf('already been registered') >= 0) return 'Diese E-Mail ist schon registriert. Melde dich an.';
+  if(msg.indexOf('email') >= 0 && msg.indexOf('invalid') >= 0) return 'Diese E-Mail-Adresse sieht ungültig aus.';
+  return 'Es gab ein Problem. Versuch es bitte erneut.';
+}
+
+function logout(){
+  if(supa){ supa.auth.signOut(); }
+  currentUser = null;
+  updateAccountUI();
+}
+
+function updateAccountUI(){
+  var btn = document.getElementById('account-btn');
+  var sub = document.getElementById('account-sub');
+  if(!btn || !sub) return;
+  if(currentUser){
+    btn.textContent = 'Konto';
+    var name = currentUser.email.length > 18 ? currentUser.email.slice(0,16)+'…' : currentUser.email;
+    sub.textContent = name;
+  } else {
+    btn.textContent = 'Anmelden';
+    sub.textContent = 'Nicht angemeldet';
+  }
+}
+
+/* ---------- Cloud-Sync mit Merge (kein blindes Überschreiben!) ---------- */
+function onLoggedIn(){
+  if(!supa || !currentUser) return;
+  supa.from('almiftah_progress').select('*').eq('user_id', currentUser.id).maybeSingle()
+    .then(function(res){
+      if(res.error){ /* Tabelle evtl. noch nicht angelegt — lokal weiterarbeiten */ return; }
+      if(res.data){ mergeCloudIntoLocal(res.data); }
+      // nach dem Mergen den zusammengeführten Stand hochladen
+      pushProgress();
+    }, function(){ /* offline */ });
+}
+
+function mergeCloudIntoLocal(row){
+  // SRS: pro Schlüssel gewinnt höhere Box bzw. späteres due
+  try {
+    var cloudSrs = row.srs_data || {};
+    for(var key in cloudSrs){
+      if(!cloudSrs.hasOwnProperty(key)) continue;
+      var c = cloudSrs[key], l = srsData[key];
+      if(!l){ srsData[key] = c; }
+      else {
+        srsData[key] = {
+          box: Math.max(l.box || 1, c.box || 1),
+          due: Math.max(l.due || 0, c.due || 0),
+          seen: (l.seen || c.seen) ? true : false
+        };
+      }
+    }
+    saveSRS();
+  } catch(e){}
+  // done-Buchstaben: Vereinigung
+  try {
+    var cloudDone = row.done_letters || [];
+    for(var i=0;i<cloudDone.length;i++){ doneLetters.add(cloudDone[i]); }
+    saveDone(doneLetters);
+  } catch(e){}
+  lastSyncAt = Date.now();
+  if(typeof renderLetters === 'function') renderLetters();
+  if(typeof updateDaily === 'function') updateDaily();
+}
+
+function pushProgress(){
+  if(!supa || !currentUser){ return; }
+  var payload = {
+    user_id: currentUser.id,
+    srs_data: srsData,
+    done_letters: Array.from(doneLetters),
+    updated_at: new Date().toISOString()
+  };
+  supa.from('almiftah_progress').upsert(payload, { onConflict: 'user_id' })
+    .then(function(res){
+      if(res.error){ pendingSync = true; }
+      else { pendingSync = false; lastSyncAt = Date.now(); }
+    }, function(){ pendingSync = true; });
+}
+
+// Nach jeder Lern-Session hochladen (nicht nach jeder einzelnen Antwort)
+function syncAfterSession(){
+  if(currentUser){ pushProgress(); }
+}
+
+// Falls ein Upload offline scheiterte: beim nächsten Online-Moment nachholen
+window.addEventListener('online', function(){
+  if(currentUser && pendingSync){ onLoggedIn(); }
+});
+
 /* ============================================================
    DATA — Arabic letters grouped by visual similarity
    forms via zero-width joiner render position shapes
@@ -573,6 +932,7 @@ function go(view){
   for(var i=0;i<views.length;i++){ views[i].classList.remove('active'); }
   var el = document.getElementById('view-' + view);
   if(el) el.classList.add('active');
+  if(view === 'start' && typeof updateDaily === 'function'){ updateDaily(); }
   window.scrollTo(0,0);
 }
 
@@ -712,17 +1072,97 @@ function markLetterDone(ch){
   saveDone(doneLetters);
   renderLetters();
   closeLetter();
+  syncAfterSession();
 }
 document.getElementById('letter-detail').addEventListener('click', function(e){
   if(e.target === this) closeLetter();
 });
+document.getElementById('auth-overlay').addEventListener('click', function(e){
+  if(e.target === this) closeAuth();
+});
 
 /* ============================================================
-   EXERCISE — "Welcher Buchstabe ist das?"
+   SRS — Leitner-System (spaced repetition)
+   Boxes 1..5; correct → move up, wrong → back to box 1.
+   Intervals grow so mastered items return less often.
+   ============================================================ */
+var SRS_KEY = 'almiftah_srs';
+var DAY = 24*60*60*1000;
+var BOX_INTERVAL = [0, 0, 1*DAY, 3*DAY, 7*DAY, 16*DAY]; // index = box (1..5)
+var srsData = loadSRS();
+
+function loadSRS(){
+  try { return JSON.parse(localStorage.getItem(SRS_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function saveSRS(){
+  try { localStorage.setItem(SRS_KEY, JSON.stringify(srsData)); } catch(e){}
+  // Supabase-Sync-Haken (kommt als Nächstes): syncProgress(srsData);
+}
+function srsItem(ch){
+  if(!srsData[ch]) srsData[ch] = { box:1, due:0, seen:false };
+  return srsData[ch];
+}
+function srsDue(){
+  var now = Date.now();
+  return ALL_LETTERS.filter(function(l){
+    var it = srsData[l.ch];
+    return it && it.seen && it.due <= now;
+  });
+}
+function srsNew(n){
+  var res = [];
+  for(var i=0;i<ALL_LETTERS.length && res.length<n;i++){
+    var l = ALL_LETTERS[i];
+    if(!srsData[l.ch] || !srsData[l.ch].seen) res.push(l);
+  }
+  return res;
+}
+function srsGrade(ch, correct){
+  var it = srsItem(ch);
+  it.seen = true;
+  it.box = correct ? Math.min(5, it.box + 1) : 1;
+  it.due = Date.now() + BOX_INTERVAL[it.box];
+  saveSRS();
+}
+function srsMastered(){
+  var c = 0;
+  ALL_LETTERS.forEach(function(l){ if(srsData[l.ch] && srsData[l.ch].box >= 4) c++; });
+  return c;
+}
+function buildDailySession(){
+  var due = srsDue();
+  var fresh = srsNew(5);
+  var deck = shuffle(due.concat(fresh)).slice(0, 12);
+  if(deck.length === 0){ deck = shuffle(ALL_LETTERS).slice(0, 8); } // nichts fällig → leichte Wiederholung
+  return deck;
+}
+function dailyCount(){ return srsDue().length + srsNew(5).length; }
+
+function updateDaily(){
+  var dueN = srsDue().length;
+  var newN = srsNew(5).length;
+  var total = dueN + newN;
+  var cEl = document.getElementById('daily-count');
+  var sEl = document.getElementById('daily-sub');
+  if(cEl) cEl.textContent = total;
+  if(sEl){
+    var parts = [];
+    if(dueN > 0) parts.push(dueN + ' zur Wiederholung');
+    if(newN > 0) parts.push(newN + ' neu');
+    sEl.textContent = parts.length ? parts.join(' · ') : 'Alles wiederholt — starte eine freie Runde';
+  }
+  var mEl = document.getElementById('daily-mastered');
+  if(mEl) mEl.textContent = srsMastered() + ' / ' + ALL_LETTERS.length;
+}
+
+/* ============================================================
+   EXERCISE — "Welcher Buchstabe ist das?"  (frei ODER SRS)
    ============================================================ */
 var exQuestions = [];
 var exIndex = 0;
 var exCorrect = 0;
+var exMode = 'free'; // 'free' | 'srs'
 
 function shuffle(a){
   a = a.slice();
@@ -731,7 +1171,16 @@ function shuffle(a){
 }
 
 function startExercise(){
+  exMode = 'free';
   exQuestions = shuffle(ALL_LETTERS).slice(0, 10);
+  exIndex = 0; exCorrect = 0;
+  go('exercise');
+  renderQuestion();
+}
+
+function startDaily(){
+  exMode = 'srs';
+  exQuestions = buildDailySession();
   exIndex = 0; exCorrect = 0;
   go('exercise');
   renderQuestion();
@@ -763,8 +1212,9 @@ function answer(chosen, correct, btn){
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
   var correctLetter = findLetter(correct);
+  var isRight = (chosen === correct);
 
-  if(chosen === correct){
+  if(isRight){
     btn.classList.add('correct');
     exCorrect++;
     fb.textContent = 'Richtig ✦';
@@ -776,23 +1226,34 @@ function answer(chosen, correct, btn){
     fb.textContent = 'Das war ' + correctLetter.name;
     fb.className = 'ex-feedback bad';
   }
-  speak(correct);
 
+  // SRS-Bewertung nur im Wiederholungs-Modus
+  if(exMode === 'srs'){ srsGrade(correct, isRight); }
+
+  speak(correct);
   setTimeout(function(){ exIndex++; renderQuestion(); }, 1400);
 }
 
 function renderExDone(){
   var body = document.getElementById('exercise-body');
   renderLetters();
-  var msg = (exCorrect === exQuestions.length)
-    ? 'Makellos! Du kennst diese Buchstaben.'
-    : 'Gut gemacht — Wiederholung festigt das Wissen.';
+  updateDaily();
+  syncAfterSession();
+  var perfect = (exCorrect === exQuestions.length);
+  var msg = perfect ? 'Makellos! Du kennst diese Buchstaben.' : 'Gut gemacht — Wiederholung festigt das Wissen.';
+  var sub = (exMode === 'srs')
+    ? '<p style="color:rgba(242,232,208,0.6); font-style:italic; margin-top:-.6rem;">Dein Fortschritt wurde gespeichert. Die Buchstaben kehren zum richtigen Zeitpunkt zurück.</p>'
+    : '';
+  var again = (exMode === 'srs')
+    ? '<button class="btn-gold" onclick="go(\'start\')">Zur Übersicht</button>'
+    : '<button class="btn-gold" onclick="startExercise()">Nochmal üben</button>';
   body.innerHTML =
     '<div class="ex-done">' +
       '<div class="star">✦</div>' +
       '<h2>' + exCorrect + ' von ' + exQuestions.length + ' richtig</h2>' +
       '<p>' + msg + '</p>' +
-      '<button class="btn-gold" onclick="startExercise()">Nochmal üben</button>' +
+      sub +
+      again +
       '<div style="margin-top:1rem;">' +
         '<button class="btn-ghost" onclick="go(\'letters\')">Zurück zu den Buchstaben</button>' +
       '</div>' +
@@ -926,11 +1387,264 @@ function writeClear(){
 function writeListen(){ speak(ALL_LETTERS[writeIndex].ch); }
 
 /* ============================================================
+   HARAKAT — Vokalzeichen (Daten + Ansicht + Übung)
+   ============================================================ */
+var HARAKAT = [
+  { id:'fatha',  zeichen:'\u064E', name:'Fatha',  beispiel:'بَ', tr:'ba',
+    desc:'Kurzes „a". Ein kleiner Strich ÜBER dem Buchstaben.',
+    hilfe:'Strich oben = Mund weit AUF = „a".' },
+  { id:'kasra',  zeichen:'\u0650', name:'Kasra',  beispiel:'بِ', tr:'bi',
+    desc:'Kurzes „i". Ein kleiner Strich UNTER dem Buchstaben.',
+    hilfe:'Strich unten = Stimme geht runter-spitz = „i".' },
+  { id:'damma',  zeichen:'\u064F', name:'Damma',  beispiel:'بُ', tr:'bu',
+    desc:'Kurzes „u". Eine kleine Schleife (wie ein Mini-Waw) über dem Buchstaben.',
+    hilfe:'Sieht aus wie ein kleines و (w) = runde Lippen = „u".' },
+  { id:'sukun',  zeichen:'\u0652', name:'Sukun',  beispiel:'بْ', tr:'b',
+    desc:'KEIN Vokal. Der Buchstabe wird „nackt" gesprochen, der Fluss stoppt kurz.',
+    hilfe:'Der kleine Kreis = Stopp-Schild: hier kommt kein Vokal.' },
+  { id:'schadda',zeichen:'\u0651', name:'Schadda', beispiel:'بّ', tr:'bb',
+    desc:'Verdopplung. Der Buchstabe wird doppelt/verstärkt gesprochen.',
+    hilfe:'Sieht aus wie ein kleines w = „wiederholen": Buchstabe zählt doppelt.' },
+  { id:'tanwin', zeichen:'\u064B', name:'Tanwin (an)', beispiel:'بًا', tr:'ban',
+    desc:'Doppel-Fatha am Wortende: gesprochen „an". (Es gibt auch ٍ „in" und ٌ „un".)',
+    hilfe:'Zwei Striche = Vokal + N hinterher: an / in / un.' }
+];
+
+function renderHarakat(){
+  var c = document.getElementById('harakat-list');
+  if(!c) return;
+  c.innerHTML = HARAKAT.map(function(h){
+    return '<div class="haraka-card">' +
+      '<div class="haraka-glyph">' + esc(h.beispiel) + '</div>' +
+      '<div class="haraka-body">' +
+        '<div><span class="haraka-name">' + esc(h.name) + '</span>' +
+        ' <span class="haraka-ex-tr">— ' + esc(h.tr) + '</span></div>' +
+        '<div class="haraka-desc">' + esc(h.desc) + '</div>' +
+        '<div class="haraka-hilfe">✦ ' + esc(h.hilfe) + '</div>' +
+      '</div>' +
+      '<button class="haraka-listen" onclick="speak(\'' + h.beispiel + '\')" aria-label="Anhören">▷</button>' +
+    '</div>';
+  }).join('');
+}
+
+/* --- Harakat-Übung: "Wie klingt das?" --- */
+var haQuestions = [];
+var haIndex = 0;
+var haCorrect = 0;
+
+// Übungspool: Haraka an verschiedenen bekannten Buchstaben
+var HA_BASES = ['ب','ت','ن','م','ل','ك','د','ر','س','ف'];
+
+function buildHaQuestion(){
+  var base = HA_BASES[Math.floor(Math.random()*HA_BASES.length)];
+  var h = HARAKAT[Math.floor(Math.random()*3)]; // nur fatha/kasra/damma für die Kernübung
+  var baseName = findLetter(base) ? findLetter(base).tr.replace(/ʾ|ʿ/g,'') : base;
+  var kurz = baseName.charAt(0); // z.B. 'b' von bāʾ
+  var richtig = kurz + h.tr.slice(1); // ba / bi / bu
+  var optionen = ['a','i','u'].map(function(v){ return kurz + v; });
+  return { anzeige: base + h.zeichen, richtig: richtig, optionen: shuffle(optionen), audio: base + h.zeichen };
+}
+
+function startHarakatExercise(){
+  haQuestions = [];
+  for(var i=0;i<8;i++){ haQuestions.push(buildHaQuestion()); }
+  haIndex = 0; haCorrect = 0;
+  go('exercise');
+  renderHaQuestion();
+}
+
+function renderHaQuestion(){
+  var body = document.getElementById('exercise-body');
+  if(haIndex >= haQuestions.length){ renderHaDone(); return; }
+  var q = haQuestions[haIndex];
+  var pct = Math.round((haIndex / haQuestions.length) * 100);
+
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="ex-question">Wie wird das ausgesprochen?</div>' +
+    '<div class="ex-glyph">' + esc(q.anzeige) + '</div>' +
+    '<div class="ex-options">' +
+      q.optionen.map(function(o){
+        return '<button class="ex-option" onclick="haAnswer(\'' + esc(o) + '\', this)">' + esc(o) + '</button>';
+      }).join('') +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback"></div>';
+}
+
+function haAnswer(chosen, btn){
+  var q = haQuestions[haIndex];
+  var buttons = document.querySelectorAll('.ex-option');
+  for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
+  var fb = document.getElementById('ex-feedback');
+
+  if(chosen === q.richtig){
+    btn.classList.add('correct');
+    haCorrect++;
+    fb.textContent = 'Richtig ✦';
+    fb.className = 'ex-feedback good';
+  } else {
+    btn.classList.add('wrong');
+    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.richtig) buttons[j].classList.add('correct'); }
+    fb.textContent = 'Das war „' + q.richtig + '"';
+    fb.className = 'ex-feedback bad';
+  }
+  speak(q.audio);
+  setTimeout(function(){ haIndex++; renderHaQuestion(); }, 1400);
+}
+
+function renderHaDone(){
+  var body = document.getElementById('exercise-body');
+  var msg = (haCorrect === haQuestions.length)
+    ? 'Perfekt! Du hörst die Vokale sicher heraus.'
+    : 'Gut gemacht — die Vokalzeichen setzen sich mit jeder Runde fester.';
+  body.innerHTML =
+    '<div class="ex-done">' +
+      '<div class="star">✦</div>' +
+      '<h2>' + haCorrect + ' von ' + haQuestions.length + ' richtig</h2>' +
+      '<p>' + msg + '</p>' +
+      '<button class="btn-gold" onclick="startHarakatExercise()">Nochmal üben</button>' +
+      '<div style="margin-top:1rem;">' +
+        '<button class="btn-ghost" onclick="go(\'harakat\')">Zurück zu den Vokalzeichen</button>' +
+      '</div>' +
+    '</div>';
+}
+
+/* ============================================================
+   WOERTER — Erste Wörter lesen (Sukun, Schadda, Tanwin in Aktion)
+   'falsch' = handgebaute typische Fehl-Lesungen (testen genau das Zeichen)
+   ============================================================ */
+var WOERTER_GRUPPEN = [
+  { titel:'Nur kurze Vokale', hinweis:'Jeder Buchstabe trägt einen Vokal — lies sie der Reihe nach.', woerter:[
+    { ar:'كَتَبَ',  tr:'kataba',  de:'er schrieb',   falsch:['kutuba','kitaba'] },
+    { ar:'جَلَسَ',  tr:'dschalasa', de:'er saß',     falsch:['dschulisa','dschalusa'] },
+    { ar:'قَلَم',   tr:'qalam',   de:'Stift',        falsch:['qilam','qalum'] }
+  ]},
+  { titel:'Sukun sehen', hinweis:'Der kleine Kreis ْ heißt: hier KEIN Vokal — zwei Buchstaben prallen aneinander.', woerter:[
+    { ar:'شَمْس',   tr:'schams',  de:'Sonne',        falsch:['schamis','schamas'] },
+    { ar:'كَلْب',   tr:'kalb',    de:'Hund',         falsch:['kalab','kalib'] },
+    { ar:'بِنْت',   tr:'bint',    de:'Mädchen',      falsch:['binat','banit'] },
+    { ar:'مَكْتَب', tr:'maktab',  de:'Schreibtisch', falsch:['makatab','maktib'] },
+    { ar:'يَكْتُبُ', tr:'yaktubu', de:'er schreibt',  falsch:['yakatubu','yaktibu'] }
+  ]},
+  { titel:'Schadda sehen', hinweis:'Das kleine ّ verdoppelt den Buchstaben — sprich ihn lang/verstärkt.', woerter:[
+    { ar:'أُمّ',     tr:'umm',     de:'Mutter',      falsch:['um','amm'] },
+    { ar:'مُعَلِّم', tr:'muallim', de:'Lehrer',      falsch:['mualim','muallam'] },
+    { ar:'تُفَّاح',  tr:'tuffāh',  de:'Äpfel',       falsch:['tufāh','taffūh'] },
+    { ar:'سَيَّارَة', tr:'sayyāra', de:'Auto',       falsch:['sayāra','siyyāra'] }
+  ]},
+  { titel:'Tanwin sehen', hinweis:'Doppelzeichen am Wortende = Vokal + n: an / in / un.', woerter:[
+    { ar:'كِتَابٌ',  tr:'kitābun', de:'ein Buch',    falsch:['kitāb','kitāban'] },
+    { ar:'بَيْتٌ',   tr:'baytun',  de:'ein Haus',    falsch:['baytu','batun'] },
+    { ar:'قَلَمٌ',   tr:'qalamun', de:'ein Stift',   falsch:['qalam','qalimun'] },
+    { ar:'شُكْرًا',  tr:'schukran', de:'danke!',     falsch:['schukra','schakran'] }
+  ]}
+];
+
+var ALLE_WOERTER = [];
+WOERTER_GRUPPEN.forEach(function(g){ g.woerter.forEach(function(w){ ALLE_WOERTER.push(w); }); });
+
+function renderWoerter(){
+  var c = document.getElementById('woerter-list');
+  if(!c) return;
+  c.innerHTML = WOERTER_GRUPPEN.map(function(g){
+    var karten = g.woerter.map(function(w){
+      return '<div class="haraka-card">' +
+        '<div class="haraka-glyph" style="width:auto; min-width:72px; padding:0 .6rem; font-size:2rem;">' + esc(w.ar) + '</div>' +
+        '<div class="haraka-body">' +
+          '<div><span class="haraka-name">' + esc(w.tr) + '</span>' +
+          ' <span class="haraka-ex-tr">— ' + esc(w.de) + '</span></div>' +
+        '</div>' +
+        '<button class="haraka-listen" onclick="speak(\'' + w.ar + '\')" aria-label="Anhören">▷</button>' +
+      '</div>';
+    }).join('');
+    return '<div class="group">' +
+      '<div class="group-head"><span class="group-title">' + esc(g.titel) + '</span></div>' +
+      '<p style="font-size:.9rem; color:rgba(242,232,208,0.65); font-style:italic; margin:.2rem 0 1rem;">' + esc(g.hinweis) + '</p>' +
+      karten +
+    '</div>';
+  }).join('');
+}
+
+/* --- Übung: "Wie liest man das?" --- */
+var woQuestions = [];
+var woIndex = 0;
+var woCorrect = 0;
+
+function startWoerterExercise(){
+  woQuestions = shuffle(ALLE_WOERTER).slice(0, 8);
+  woIndex = 0; woCorrect = 0;
+  go('exercise');
+  renderWoQuestion();
+}
+
+function renderWoQuestion(){
+  var body = document.getElementById('exercise-body');
+  if(woIndex >= woQuestions.length){ renderWoDone(); return; }
+  var q = woQuestions[woIndex];
+  var optionen = shuffle([q.tr].concat(q.falsch));
+  var pct = Math.round((woIndex / woQuestions.length) * 100);
+
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="ex-question">Wie liest man das?</div>' +
+    '<div class="ex-glyph" style="font-size:clamp(3.5rem, 16vw, 6rem);">' + esc(q.ar) + '</div>' +
+    '<div class="ex-options" style="grid-template-columns:1fr;">' +
+      optionen.map(function(o){
+        return '<button class="ex-option" onclick="woAnswer(this)">' + esc(o) + '</button>';
+      }).join('') +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback"></div>';
+}
+
+function woAnswer(btn){
+  var q = woQuestions[woIndex];
+  var chosen = btn.textContent;
+  var buttons = document.querySelectorAll('.ex-option');
+  for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
+  var fb = document.getElementById('ex-feedback');
+
+  if(chosen === q.tr){
+    btn.classList.add('correct');
+    woCorrect++;
+    fb.textContent = 'Richtig ✦ — ' + q.de;
+    fb.className = 'ex-feedback good';
+  } else {
+    btn.classList.add('wrong');
+    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.tr) buttons[j].classList.add('correct'); }
+    fb.textContent = 'Es heißt „' + q.tr + '" — ' + q.de;
+    fb.className = 'ex-feedback bad';
+  }
+  speak(q.ar);
+  setTimeout(function(){ woIndex++; renderWoQuestion(); }, 1600);
+}
+
+function renderWoDone(){
+  var body = document.getElementById('exercise-body');
+  var msg = (woCorrect === woQuestions.length)
+    ? 'Hervorragend — du liest schon echte Wörter!'
+    : 'Gut gemacht! Achte besonders auf Sukun und Schadda — sie verändern das ganze Wort.';
+  body.innerHTML =
+    '<div class="ex-done">' +
+      '<div class="star">✦</div>' +
+      '<h2>' + woCorrect + ' von ' + woQuestions.length + ' richtig</h2>' +
+      '<p>' + msg + '</p>' +
+      '<button class="btn-gold" onclick="startWoerterExercise()">Nochmal üben</button>' +
+      '<div style="margin-top:1rem;">' +
+        '<button class="btn-ghost" onclick="go(\'woerter\')">Zurück zu den Wörtern</button>' +
+      '</div>' +
+    '</div>';
+}
+
+/* ============================================================
    INIT
    ============================================================ */
 renderPath('intro-path');
 renderPath('start-path');
 renderLetters();
+renderHarakat();
+renderWoerter();
+initSupabase();
+updateAccountUI();
 if('speechSynthesis' in window){
   window.speechSynthesis.getVoices();
   window.speechSynthesis.onvoiceschanged = function(){ window.speechSynthesis.getVoices(); };
