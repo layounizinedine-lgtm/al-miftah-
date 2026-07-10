@@ -376,6 +376,33 @@
   }
   .haraka-listen:hover{ background: rgba(201,162,39,0.12); }
 
+  /* ---------- DIALOGE (Stufe 2) ---------- */
+  .dlg-wrap{ max-width: 38rem; margin: 0 auto; padding: 1.5rem 1.2rem 4rem; }
+  .dlg-intro{ text-align:center; font-family:'Cormorant Garamond', serif; font-style:italic; color: rgba(242,232,208,0.7); margin-bottom: 1.6rem; }
+  .dlg-line{ display:flex; margin-bottom: 1rem; }
+  .dlg-line.b{ justify-content:flex-end; }
+  .dlg-bubble{
+    max-width: 86%;
+    background: linear-gradient(160deg, rgba(15,61,61,0.9), rgba(10,43,43,0.9));
+    border:1px solid rgba(201,162,39,0.3); border-radius: 12px 12px 12px 3px;
+    padding: .85rem 1.1rem;
+  }
+  .dlg-line.b .dlg-bubble{
+    background: linear-gradient(160deg, rgba(122,46,46,0.5), rgba(92,32,32,0.5));
+    border-color: rgba(227,128,111,0.35); border-radius: 12px 12px 3px 12px;
+  }
+  .dlg-sprecher{ font-family:'Cormorant Garamond', serif; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color: var(--gold-bright); margin-bottom:.3rem; }
+  .dlg-ar{ font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:1.5rem; line-height:2.1; color:#fdf8ec; direction:rtl; text-align:right; }
+  .dlg-tr{ font-family:'Lora', serif; font-style:italic; font-size:.88rem; color: rgba(242,232,208,0.65); margin-top:.4rem; }
+  .dlg-de{ font-size:.92rem; color: rgba(242,232,208,0.9); margin-top:.15rem; }
+  .dlg-wrap.hide-help .dlg-tr, .dlg-wrap.hide-help .dlg-de{ display:none; }
+  .dlg-play{
+    background:transparent; border:1px solid rgba(201,162,39,0.4); color: var(--gold-bright);
+    border-radius:50%; width:34px; height:34px; font-size:.85rem; cursor:pointer; margin-top:.5rem;
+  }
+  .dlg-play:hover{ background: rgba(201,162,39,0.12); }
+  .dlg-controls{ display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; margin: 1.6rem 0 .6rem; }
+
   /* ---------- FOOTER ---------- */
   .footer{
     background: var(--teal-deep); color: rgba(242,232,208,0.7); text-align:center;
@@ -554,7 +581,7 @@
     <div class="page-head">
       <div class="kicker">Erste Stufe · Teil 3</div>
       <h1>Erste Wörter lesen</h1>
-      <p>Hier siehst du Sukun, Schadda &amp; Tanwin in echten Wörtern</p>
+      <p>Lange Vokale, Sukun, Schadda &amp; alle drei Tanwin-Arten in echten Wörtern</p>
     </div>
 
     <div class="harakat-list" id="woerter-list"><!-- filled by JS --></div>
@@ -564,7 +591,7 @@
       <div style="margin-top:1.4rem; padding-top:1.4rem; border-top:1px solid rgba(201,162,39,0.2); max-width:24rem; margin-left:auto; margin-right:auto;">
         <p style="font-family:'Cormorant Garamond',serif; font-style:italic; color:rgba(242,232,208,0.7); margin:0 0 .8rem;">Bereit für den Abschluss?</p>
         <button class="btn-gold" onclick="startStufenpruefung()">✦ Stufenprüfung ablegen</button>
-        <p style="font-size:.85rem; color:rgba(242,232,208,0.55); margin-top:.6rem;">20 Fragen: Erkennen · Hören · Vokale · Lesen — ab 16 richtigen bestanden · schaltet Stufe 2 frei</p>
+        <p style="font-size:.85rem; color:rgba(242,232,208,0.55); margin-top:.6rem;">20 Fragen: Erkennen · Hören · Vokale &amp; Tanwin · Lesen — ab 16 richtigen bestanden · schaltet Stufe 2 frei</p>
       </div>
     </div>
 
@@ -586,9 +613,11 @@
 
     <div class="page-head">
       <div class="kicker">Zweite Stufe</div>
-      <h1>Wortschatz-Themen</h1>
-      <p>Wähle ein Themenfeld und lerne seine Wörter</p>
+      <h1>Wörter &amp; Gespräche</h1>
+      <p>Lerne Vokabeln — und lies sie sofort in echten Gesprächen</p>
     </div>
+
+    <div class="harakat-list" id="dialoge-list"><!-- filled by JS --></div>
 
     <div class="harakat-list" id="themen-list"><!-- filled by JS --></div>
 
@@ -623,6 +652,30 @@
     <footer class="footer">
       <span class="ar">✦ كَلِمَةٌ بَعْدَ كَلِمَةٍ ✦</span>
       Wort für Wort.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: DIALOG (einzelnes Gespräch) ============ -->
+  <section id="view-dialog" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('stufe2')">‹ Stufe 2</button>
+      <div style="text-align:right;">
+        <h2 id="dialog-titel-ar">حِوَار</h2>
+        <div class="sub">Gespräch</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Zweite Stufe · Gespräch</div>
+      <h1 id="dialog-head">—</h1>
+      <p id="dialog-unter">—</p>
+    </div>
+
+    <div class="dlg-wrap" id="dialog-body"><!-- filled by JS --></div>
+
+    <footer class="footer">
+      <span class="ar">✦ الْكَلَامُ يَفْتَحُ الْأَبْوَابَ ✦</span>
+      Sprechen öffnet Türen.
     </footer>
   </section>
 
@@ -1025,6 +1078,7 @@ function go(view){
   if(el) el.classList.add('active');
   if(view === 'start' && typeof updateDaily === 'function'){ updateDaily(); }
   if(view === 'stufe2' && typeof renderThemen === 'function'){ renderThemen(); }
+  if(view === 'stufe2' && typeof renderDialoge === 'function'){ renderDialoge(); }
   window.scrollTo(0,0);
 }
 
@@ -1512,31 +1566,52 @@ function writeListen(){ speak(ALL_LETTERS[writeIndex].ch); }
    HARAKAT — Vokalzeichen (Daten + Ansicht + Übung)
    ============================================================ */
 var HARAKAT = [
-  { id:'fatha',  zeichen:'\u064E', name:'Fatha',  beispiel:'بَ', tr:'ba',
+  { id:'fatha',  gruppe:'Die kurzen Vokale', zeichen:'\u064E', name:'Fatha',  beispiel:'بَ', tr:'ba',
     desc:'Kurzes „a". Ein kleiner Strich ÜBER dem Buchstaben.',
     hilfe:'Strich oben = Mund weit AUF = „a".' },
-  { id:'kasra',  zeichen:'\u0650', name:'Kasra',  beispiel:'بِ', tr:'bi',
+  { id:'kasra',  gruppe:'Die kurzen Vokale', zeichen:'\u0650', name:'Kasra',  beispiel:'بِ', tr:'bi',
     desc:'Kurzes „i". Ein kleiner Strich UNTER dem Buchstaben.',
     hilfe:'Strich unten = Stimme geht runter-spitz = „i".' },
-  { id:'damma',  zeichen:'\u064F', name:'Damma',  beispiel:'بُ', tr:'bu',
+  { id:'damma',  gruppe:'Die kurzen Vokale', zeichen:'\u064F', name:'Damma',  beispiel:'بُ', tr:'bu',
     desc:'Kurzes „u". Eine kleine Schleife (wie ein Mini-Waw) über dem Buchstaben.',
     hilfe:'Sieht aus wie ein kleines و (w) = runde Lippen = „u".' },
-  { id:'sukun',  zeichen:'\u0652', name:'Sukun',  beispiel:'بْ', tr:'b',
+  { id:'madd-a', gruppe:'Die langen Vokale (Madd)', zeichen:'\u064E\u0627', name:'Langes ā — Fatha + Alif', beispiel:'بَا', tr:'bā',
+    desc:'Langes „aa". Nach der Fatha folgt ein Alif — der Vokal wird gedehnt gesprochen.',
+    hilfe:'Alif nach Fatha = das „a" in die Länge ziehen: baaa.' },
+  { id:'madd-i', gruppe:'Die langen Vokale (Madd)', zeichen:'\u0650\u064A', name:'Langes ī — Kasra + Yāʾ', beispiel:'بِي', tr:'bī',
+    desc:'Langes „ii". Nach der Kasra folgt ein Yāʾ ohne eigenen Vokal.',
+    hilfe:'Yāʾ nach Kasra = das „i" dehnen: biii.' },
+  { id:'madd-u', gruppe:'Die langen Vokale (Madd)', zeichen:'\u064F\u0648', name:'Langes ū — Damma + Wāw', beispiel:'بُو', tr:'bū',
+    desc:'Langes „uu". Nach der Damma folgt ein Wāw ohne eigenen Vokal.',
+    hilfe:'Wāw nach Damma = das „u" dehnen: buuu.' },
+  { id:'fathatan', gruppe:'Tanwin — die Doppelzeichen am Wortende', zeichen:'\u064B', name:'Fathatan — Tanwin „an"', beispiel:'بًا', tr:'ban',
+    desc:'DOPPELTE Fatha am Wortende: gesprochen „an". Meist steht dahinter ein stummes Alif als Träger.',
+    hilfe:'Zwei Striche oben = a + n hinterher: „an". Wie in شُكْرًا (schukran).' },
+  { id:'kasratan', gruppe:'Tanwin — die Doppelzeichen am Wortende', zeichen:'\u064D', name:'Kasratan — Tanwin „in"', beispiel:'بٍ', tr:'bin',
+    desc:'DOPPELTE Kasra am Wortende: gesprochen „in". Zwei kleine Striche UNTER dem Buchstaben.',
+    hilfe:'Zwei Striche unten = i + n hinterher: „in". Wie in بَيْتٍ (baitin).' },
+  { id:'dammatan', gruppe:'Tanwin — die Doppelzeichen am Wortende', zeichen:'\u064C', name:'Dammatan — Tanwin „un"', beispiel:'بٌ', tr:'bun',
+    desc:'DOPPELTE Damma am Wortende: gesprochen „un". Sieht aus wie eine Damma mit einem Häkchen.',
+    hilfe:'Doppelte Schleife oben = u + n hinterher: „un". Wie in كِتَابٌ (kitābun).' },
+  { id:'sukun',  gruppe:'Die Sonderzeichen', zeichen:'\u0652', name:'Sukun',  beispiel:'بْ', tr:'b',
     desc:'KEIN Vokal. Der Buchstabe wird „nackt" gesprochen, der Fluss stoppt kurz.',
     hilfe:'Der kleine Kreis = Stopp-Schild: hier kommt kein Vokal.' },
-  { id:'schadda',zeichen:'\u0651', name:'Schadda', beispiel:'بّ', tr:'bb',
+  { id:'schadda',gruppe:'Die Sonderzeichen', zeichen:'\u0651', name:'Schadda', beispiel:'بّ', tr:'bb',
     desc:'Verdopplung. Der Buchstabe wird doppelt/verstärkt gesprochen.',
-    hilfe:'Sieht aus wie ein kleines w = „wiederholen": Buchstabe zählt doppelt.' },
-  { id:'tanwin', zeichen:'\u064B', name:'Tanwin (an)', beispiel:'بًا', tr:'ban',
-    desc:'Doppel-Fatha am Wortende: gesprochen „an". (Es gibt auch ٍ „in" und ٌ „un".)',
-    hilfe:'Zwei Striche = Vokal + N hinterher: an / in / un.' }
+    hilfe:'Sieht aus wie ein kleines w = „wiederholen": Buchstabe zählt doppelt.' }
 ];
 
 function renderHarakat(){
   var c = document.getElementById('harakat-list');
   if(!c) return;
-  c.innerHTML = HARAKAT.map(function(h){
-    return '<div class="haraka-card">' +
+  var html = '';
+  var letzteGruppe = null;
+  HARAKAT.forEach(function(h){
+    if(h.gruppe !== letzteGruppe){
+      letzteGruppe = h.gruppe;
+      html += '<div class="group-head" style="margin-top:1.6rem;"><span class="group-title">' + esc(h.gruppe) + '</span></div>';
+    }
+    html += '<div class="haraka-card">' +
       '<div class="haraka-glyph">' + esc(h.beispiel) + '</div>' +
       '<div class="haraka-body">' +
         '<div><span class="haraka-name">' + esc(h.name) + '</span>' +
@@ -1546,7 +1621,8 @@ function renderHarakat(){
       '</div>' +
       '<button class="haraka-listen" onclick="speak(\'' + h.beispiel + '\')" aria-label="Anhören">▷</button>' +
     '</div>';
-  }).join('');
+  });
+  c.innerHTML = html;
 }
 
 /* --- Harakat-Übung: "Wie klingt das?" --- */
@@ -1554,22 +1630,49 @@ var haQuestions = [];
 var haIndex = 0;
 var haCorrect = 0;
 
-// Übungspool: Haraka an verschiedenen bekannten Buchstaben
+// Übungspool: kurze & lange Vokale + alle drei Tanwin-Arten an bekannten Buchstaben
 var HA_BASES = ['ب','ت','ن','م','ل','ك','د','ر','س','ف'];
 
 function buildHaQuestion(){
   var base = HA_BASES[Math.floor(Math.random()*HA_BASES.length)];
-  var h = HARAKAT[Math.floor(Math.random()*3)]; // nur fatha/kasra/damma für die Kernübung
   var baseName = findLetter(base) ? findLetter(base).tr.replace(/ʾ|ʿ/g,'') : base;
-  var kurz = baseName.charAt(0); // z.B. 'b' von bāʾ
-  var richtig = kurz + h.tr.slice(1); // ba / bi / bu
-  var optionen = ['a','i','u'].map(function(v){ return kurz + v; });
-  return { anzeige: base + h.zeichen, richtig: richtig, optionen: shuffle(optionen), audio: base + h.zeichen };
+  var k = baseName.charAt(0); // z.B. 'b' von bāʾ
+  var r = Math.random();
+  if(r < 0.4){
+    // kurze Vokale: ba / bi / bu
+    var kurz = [ { z:'\u064E', v:'a' }, { z:'\u0650', v:'i' }, { z:'\u064F', v:'u' } ];
+    var w = kurz[Math.floor(Math.random()*3)];
+    return { anzeige: base + w.z, richtig: k + w.v,
+      optionen: shuffle(['a','i','u'].map(function(v){ return k + v; })),
+      audio: base + w.z };
+  }
+  if(r < 0.75){
+    // Tanwin: ban / bin / bun — Fathatan mit stummem Alif-Träger
+    var tan = [
+      { anzeige: base + '\u064B\u0627', v:'an' },
+      { anzeige: base + '\u064D', v:'in' },
+      { anzeige: base + '\u064C', v:'un' }
+    ];
+    var t = tan[Math.floor(Math.random()*3)];
+    return { anzeige: t.anzeige, richtig: k + t.v,
+      optionen: shuffle(['an','in','un'].map(function(v){ return k + v; })),
+      audio: t.anzeige };
+  }
+  // lange Vokale: bā / bī / bū
+  var lang = [
+    { anzeige: base + '\u064E\u0627', v:'ā' },
+    { anzeige: base + '\u0650\u064A', v:'ī' },
+    { anzeige: base + '\u064F\u0648', v:'ū' }
+  ];
+  var lg = lang[Math.floor(Math.random()*3)];
+  return { anzeige: lg.anzeige, richtig: k + lg.v,
+    optionen: shuffle(['ā','ī','ū'].map(function(v){ return k + v; })),
+    audio: lg.anzeige };
 }
 
 function startHarakatExercise(){
   haQuestions = [];
-  for(var i=0;i<8;i++){ haQuestions.push(buildHaQuestion()); }
+  for(var i=0;i<12;i++){ haQuestions.push(buildHaQuestion()); }
   haIndex = 0; haCorrect = 0;
   go('exercise');
   renderHaQuestion();
@@ -1639,7 +1742,15 @@ var WOERTER_GRUPPEN = [
   { titel:'Nur kurze Vokale', hinweis:'Jeder Buchstabe trägt einen Vokal — lies sie der Reihe nach.', woerter:[
     { ar:'كَتَبَ',  tr:'kataba',  de:'er schrieb',   falsch:['kutuba','kitaba'] },
     { ar:'جَلَسَ',  tr:'dschalasa', de:'er saß',     falsch:['dschulisa','dschalusa'] },
-    { ar:'قَلَم',   tr:'qalam',   de:'Stift',        falsch:['qilam','qalum'] }
+    { ar:'قَلَم',   tr:'qalam',   de:'Stift',        falsch:['qilam','qalum'] },
+    { ar:'وَلَد',   tr:'walad',   de:'Junge',        falsch:['wulid','walud'] }
+  ]},
+  { titel:'Lange Vokale (Madd)', hinweis:'Alif, Wāw und Yāʾ dehnen den Vokal davor: ā, ū, ī.', woerter:[
+    { ar:'بَاب',    tr:'bāb',     de:'Tür',          falsch:['bab','būb'] },
+    { ar:'كِتَاب',  tr:'kitāb',   de:'Buch',         falsch:['kitab','kutūb'] },
+    { ar:'نُور',    tr:'nūr',     de:'Licht',        falsch:['nur','nār'] },
+    { ar:'فِيل',    tr:'fīl',     de:'Elefant',      falsch:['fil','fūl'] },
+    { ar:'سُوق',    tr:'sūq',     de:'Markt',        falsch:['sīq','saq'] }
   ]},
   { titel:'Sukun sehen', hinweis:'Der kleine Kreis ْ heißt: hier KEIN Vokal — zwei Buchstaben prallen aneinander.', woerter:[
     { ar:'شَمْس',   tr:'schams',  de:'Sonne',        falsch:['schamis','schamas'] },
@@ -1654,11 +1765,15 @@ var WOERTER_GRUPPEN = [
     { ar:'تُفَّاح',  tr:'tuffāh',  de:'Äpfel',       falsch:['tufāh','taffūh'] },
     { ar:'سَيَّارَة', tr:'sayyāra', de:'Auto',       falsch:['sayāra','siyyāra'] }
   ]},
-  { titel:'Tanwin sehen', hinweis:'Doppelzeichen am Wortende = Vokal + n: an / in / un.', woerter:[
-    { ar:'كِتَابٌ',  tr:'kitābun', de:'ein Buch',    falsch:['kitāb','kitāban'] },
-    { ar:'بَيْتٌ',   tr:'baytun',  de:'ein Haus',    falsch:['baytu','batun'] },
-    { ar:'قَلَمٌ',   tr:'qalamun', de:'ein Stift',   falsch:['qalam','qalimun'] },
-    { ar:'شُكْرًا',  tr:'schukran', de:'danke!',     falsch:['schukra','schakran'] }
+  { titel:'Tanwin sehen — an · in · un', hinweis:'Doppelzeichen am Wortende = Vokal + n. Achte genau hin: ً = an, ٍ = in, ٌ = un.', woerter:[
+    { ar:'كِتَابٌ',  tr:'kitābun', de:'ein Buch',    falsch:['kitāban','kitābin'] },
+    { ar:'قَلَمًا',  tr:'qalaman', de:'einen Stift', falsch:['qalamun','qalamin'] },
+    { ar:'بَيْتٍ',   tr:'baitin',  de:'eines Hauses', falsch:['baitun','baitan'] },
+    { ar:'شُكْرًا',  tr:'schukran', de:'danke!',     falsch:['schukrun','schukrin'] },
+    { ar:'رَجُلٌ',   tr:'radschulun', de:'ein Mann', falsch:['radschulin','radschulan'] },
+    { ar:'سَلَامٍ',  tr:'salāmin', de:'(des) Friedens', falsch:['salāmun','salāman'] },
+    { ar:'أَهْلًا',  tr:'ahlan',   de:'willkommen!', falsch:['ahlun','ahlin'] },
+    { ar:'بِنْتٌ',   tr:'bintun',  de:'ein Mädchen', falsch:['bintan','bintin'] }
   ]}
 ];
 
@@ -1693,7 +1808,7 @@ var woIndex = 0;
 var woCorrect = 0;
 
 function startWoerterExercise(){
-  woQuestions = shuffle(ALLE_WOERTER).slice(0, 8);
+  woQuestions = shuffle(ALLE_WOERTER).slice(0, 10);
   woIndex = 0; woCorrect = 0;
   go('exercise');
   renderWoQuestion();
@@ -1868,7 +1983,10 @@ function renderThemen(){
     c.innerHTML = '<p style="text-align:center; color:rgba(242,232,208,0.7);">Die Vokabeldatei (vokabeln.js) wurde nicht gefunden. Bitte zusammen mit index.html hochladen.</p>';
     return;
   }
-  c.innerHTML = VOKAB_THEMEN.map(function(t){
+  var kopf = '<div class="group-head" style="margin-top:1.6rem;"><span class="group-title">Wortschatz-Themen</span>' +
+    '<span class="group-num">' + VOKAB_THEMEN.length + ' Themenfelder</span></div>' +
+    '<p style="font-size:.9rem; color:rgba(242,232,208,0.65); font-style:italic; margin:.2rem 0 1rem;">Wähle ein Themenfeld und lerne seine Wörter — sie tauchen in den Gesprächen wieder auf.</p>';
+  c.innerHTML = kopf + VOKAB_THEMEN.map(function(t){
     var gelernt = t.vocab.filter(function(v){ var it = srsData['v:'+v.id]; return it && it.box >= 4; }).length;
     return '<button class="haraka-card stop-clickable" style="width:100%; text-align:left; cursor:pointer;" onclick="openThema(' + t.id + ')">' +
       '<div class="haraka-glyph" style="font-size:1.6rem;">' + esc(t.vocab[0].arabic.charAt(0)) + '</div>' +
@@ -1995,6 +2113,206 @@ function startVokabelExercise(){
   var deck = shuffle(aktuellesThema.vocab).slice(0, 10);
   exam.fragen = deck.map(vokFrage);
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'vokabel';
+  go('exercise');
+  renderExamQuestion();
+}
+
+/* ============================================================
+   DIALOGE — Erste Gespräche mit vollen Harakat (Stufe 2)
+   Simpel, alltagsnah, abgestimmt auf den Vokabel-Wortschatz.
+   ============================================================ */
+var DIALOGE = [
+  { id:0, titelAr:'التَّحِيَّة', titel:'Die Begrüßung', unter:'Begrüßen, nach dem Befinden fragen, sich verabschieden',
+    zeilen:[
+      { s:'A', ar:'السَّلَامُ عَلَيْكُمْ.', tr:'as-salāmu ʿalaikum.', de:'Friede sei mit dir! (Hallo!)' },
+      { s:'B', ar:'وَعَلَيْكُمُ السَّلَامُ.', tr:'wa-ʿalaikumu s-salām.', de:'Und mit dir sei Friede!' },
+      { s:'A', ar:'كَيْفَ حَالُكَ؟', tr:'kaifa ḥāluka?', de:'Wie geht es dir?' },
+      { s:'B', ar:'أَنَا بِخَيْرٍ، الْحَمْدُ لِلَّهِ. وَأَنْتَ؟', tr:'anā bi-chairin, al-ḥamdu lillāh. wa-anta?', de:'Mir geht es gut, Gott sei Dank. Und dir?' },
+      { s:'A', ar:'بِخَيْرٍ، شُكْرًا!', tr:'bi-chairin, schukran!', de:'Gut, danke!' },
+      { s:'B', ar:'مَعَ السَّلَامَةِ!', tr:'maʿa s-salāma!', de:'Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Was bedeutet dieser Satz?', glyph:'كَيْفَ حَالُكَ؟',
+        richtig:'Wie geht es dir?', optionen:['Wie geht es dir?','Wie heißt du?','Woher kommst du?','Auf Wiedersehen!'] },
+      { typ:'dear', frage:'Wie antwortest du auf „as-salāmu ʿalaikum"?', glyph:'„Friede sei mit dir!"',
+        richtig:'وَعَلَيْكُمُ السَّلَامُ', optionen:['وَعَلَيْكُمُ السَّلَامُ','شُكْرًا','مَعَ السَّلَامَةِ','بِخَيْرٍ'] },
+      { typ:'dear', frage:'Wie sagst du „danke"?', glyph:'„danke"',
+        richtig:'شُكْرًا', optionen:['شُكْرًا','عَفْوًا','نَعَمْ','مَعَ السَّلَامَةِ'] }
+    ]},
+  { id:1, titelAr:'مَنْ أَنْتَ؟', titel:'Wer bist du?', unter:'Namen und Herkunft erfragen und nennen',
+    zeilen:[
+      { s:'A', ar:'مَا اسْمُكَ؟', tr:'mā-smuka?', de:'Wie heißt du?' },
+      { s:'B', ar:'اِسْمِي أَحْمَدُ. وَأَنْتَ؟', tr:'ismī aḥmad. wa-anta?', de:'Ich heiße Ahmad. Und du?' },
+      { s:'A', ar:'اِسْمِي كَرِيمٌ. مِنْ أَيْنَ أَنْتَ؟', tr:'ismī karīm. min aina anta?', de:'Ich heiße Karim. Woher kommst du?' },
+      { s:'B', ar:'أَنَا مِنْ أَلْمَانْيَا. وَأَنْتَ؟', tr:'anā min almāniyā. wa-anta?', de:'Ich komme aus Deutschland. Und du?' },
+      { s:'A', ar:'أَنَا مِنْ مِصْرَ.', tr:'anā min miṣr.', de:'Ich komme aus Ägypten.' },
+      { s:'B', ar:'تَشَرَّفْنَا!', tr:'tascharrafnā!', de:'Sehr erfreut!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Was bedeutet diese Frage?', glyph:'مَا اسْمُكَ؟',
+        richtig:'Wie heißt du?', optionen:['Wie heißt du?','Woher kommst du?','Wie geht es dir?','Wer ist das?'] },
+      { typ:'wort', frage:'Was bedeutet dieser Satz?', glyph:'أَنَا مِنْ أَلْمَانْيَا.',
+        richtig:'Ich komme aus Deutschland.', optionen:['Ich komme aus Deutschland.','Ich komme aus Ägypten.','Ich heiße Ahmad.','Ich bin Schüler.'] },
+      { typ:'dear', frage:'Wie fragst du nach der Herkunft?', glyph:'„Woher kommst du?"',
+        richtig:'مِنْ أَيْنَ أَنْتَ؟', optionen:['مِنْ أَيْنَ أَنْتَ؟','مَا اسْمُكَ؟','كَيْفَ حَالُكَ؟','مَنْ هَذَا؟'] }
+    ]},
+  { id:2, titelAr:'فِي الْمَدْرَسَةِ', titel:'In der Schule', unter:'Stift, Buch, Lehrer — dein Wortschatz in Aktion',
+    zeilen:[
+      { s:'A', ar:'هَلْ عِنْدَكَ قَلَمٌ؟', tr:'hal ʿindaka qalamun?', de:'Hast du einen Stift?' },
+      { s:'B', ar:'نَعَمْ، عِنْدِي قَلَمٌ وَكِتَابٌ.', tr:'naʿam, ʿindī qalamun wa-kitābun.', de:'Ja, ich habe einen Stift und ein Buch.' },
+      { s:'A', ar:'أَيْنَ الْمُعَلِّمُ؟', tr:'aina l-muʿallimu?', de:'Wo ist der Lehrer?' },
+      { s:'B', ar:'هُوَ فِي الصَّفِّ.', tr:'huwa fī ṣ-ṣaff.', de:'Er ist im Klassenzimmer.' },
+      { s:'A', ar:'عِنْدِي سُؤَالٌ لِلْمُعَلِّمِ.', tr:'ʿindī suʾālun lil-muʿallim.', de:'Ich habe eine Frage an den Lehrer.' },
+      { s:'B', ar:'هَيَّا بِنَا!', tr:'hayyā binā!', de:'Los, gehen wir!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Was hat B dabei?', glyph:'عِنْدِي قَلَمٌ وَكِتَابٌ.',
+        richtig:'einen Stift und ein Buch', optionen:['einen Stift und ein Buch','einen Schlüssel','ein Auto','ein Telefon und ein Heft'] },
+      { typ:'wort', frage:'Was bedeutet diese Frage?', glyph:'أَيْنَ الْمُعَلِّمُ؟',
+        richtig:'Wo ist der Lehrer?', optionen:['Wo ist der Lehrer?','Wer ist der Lehrer?','Wie heißt der Lehrer?','Wo ist die Schule?'] },
+      { typ:'dear', frage:'Wie sagst du „ja"?', glyph:'„ja"',
+        richtig:'نَعَمْ', optionen:['نَعَمْ','لَا','شُكْرًا','هَيَّا'] }
+    ]},
+  { id:3, titelAr:'الْعَائِلَةُ', titel:'Die Familie', unter:'Bruder, Schwester und das eigene Haus vorstellen',
+    zeilen:[
+      { s:'A', ar:'مَنْ هَذَا؟', tr:'man hādhā?', de:'Wer ist das?' },
+      { s:'B', ar:'هَذَا أَخِي، اِسْمُهُ عُمَرُ.', tr:'hādhā achī, ismuhu ʿumar.', de:'Das ist mein Bruder, er heißt Umar.' },
+      { s:'A', ar:'وَمَنْ هَذِهِ؟', tr:'wa-man hādhihi?', de:'Und wer ist das (weiblich)?' },
+      { s:'B', ar:'هَذِهِ أُخْتِي، هِيَ طَالِبَةٌ.', tr:'hādhihi uchtī, hiya ṭālibatun.', de:'Das ist meine Schwester, sie ist Schülerin.' },
+      { s:'A', ar:'هَلْ هَذَا بَيْتُكُمْ؟', tr:'hal hādhā baitukum?', de:'Ist das euer Haus?' },
+      { s:'B', ar:'نَعَمْ، هَذَا بَيْتُنَا الْجَمِيلُ.', tr:'naʿam, hādhā baitunā l-dschamīl.', de:'Ja, das ist unser schönes Haus.' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wer ist Umar?', glyph:'هَذَا أَخِي، اِسْمُهُ عُمَرُ.',
+        richtig:'der Bruder', optionen:['der Bruder','die Schwester','der Lehrer','der Vater'] },
+      { typ:'wort', frage:'Was ist die Schwester?', glyph:'هِيَ طَالِبَةٌ.',
+        richtig:'Schülerin', optionen:['Schülerin','Lehrerin','Köchin','Ingenieurin'] },
+      { typ:'wort', frage:'Was bedeutet diese Frage?', glyph:'مَنْ هَذَا؟',
+        richtig:'Wer ist das?', optionen:['Wer ist das?','Was ist das?','Wo ist das?','Wessen ist das?'] }
+    ]},
+  { id:4, titelAr:'فِي الْبَيْتِ', titel:'Im Haus', unter:'Der Schlüssel, der Tisch, die Küche — Dinge finden',
+    zeilen:[
+      { s:'A', ar:'أَيْنَ الْمِفْتَاحُ؟', tr:'aina l-miftāḥu?', de:'Wo ist der Schlüssel?' },
+      { s:'B', ar:'الْمِفْتَاحُ عَلَى الطَّاوِلَةِ.', tr:'al-miftāḥu ʿalā ṭ-ṭāwila.', de:'Der Schlüssel ist auf dem Tisch.' },
+      { s:'A', ar:'وَأَيْنَ أُمِّي؟', tr:'wa-aina ummī?', de:'Und wo ist meine Mutter?' },
+      { s:'B', ar:'هِيَ فِي الْمَطْبَخِ.', tr:'hiya fī l-maṭbach.', de:'Sie ist in der Küche.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا!', tr:'schukran dschazīlan!', de:'Vielen Dank!' },
+      { s:'B', ar:'عَفْوًا!', tr:'ʿafwan!', de:'Gern geschehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wo ist der Schlüssel?', glyph:'الْمِفْتَاحُ عَلَى الطَّاوِلَةِ.',
+        richtig:'auf dem Tisch', optionen:['auf dem Tisch','in der Küche','an der Tür','im Auto'] },
+      { typ:'wort', frage:'Wo ist die Mutter?', glyph:'هِيَ فِي الْمَطْبَخِ.',
+        richtig:'in der Küche', optionen:['in der Küche','im Klassenzimmer','auf dem Markt','im Garten'] },
+      { typ:'dear', frage:'Wie antwortest du auf „schukran"?', glyph:'„Gern geschehen!"',
+        richtig:'عَفْوًا', optionen:['عَفْوًا','شُكْرًا','نَعَمْ','أَهْلًا'] }
+    ]}
+];
+var aktuellerDialog = null;
+var DIALOG_DONE_KEY = 'almiftah_dialoge_done';
+function loadDialogeDone(){
+  try { return new Set(JSON.parse(localStorage.getItem(DIALOG_DONE_KEY) || '[]')); }
+  catch(e){ return new Set(); }
+}
+function saveDialogeDone(set){
+  try { localStorage.setItem(DIALOG_DONE_KEY, JSON.stringify(Array.from(set))); } catch(e){}
+}
+var dialogeDone = loadDialogeDone();
+
+function renderDialoge(){
+  var c = document.getElementById('dialoge-list');
+  if(!c) return;
+  var html = '<div class="group-head"><span class="group-title">Erste Gespräche — Lesen mit Harakat</span>' +
+    '<span class="group-num">' + DIALOGE.length + ' Dialoge</span></div>' +
+    '<p style="font-size:.9rem; color:rgba(242,232,208,0.65); font-style:italic; margin:.2rem 0 1rem;">Kurz, simpel, voll vokalisiert — jedes Gespräch nutzt Wörter aus den Themenfeldern.</p>';
+  html += DIALOGE.map(function(d){
+    var done = dialogeDone.has(d.id) ? ' <span style="color:var(--gold-bright);">✦</span>' : '';
+    return '<button class="haraka-card stop-clickable" style="width:100%; text-align:left; cursor:pointer;" onclick="openDialog(' + d.id + ')">' +
+      '<div class="haraka-glyph" style="font-size:1.35rem; width:auto; min-width:72px; padding:0 .5rem;">' + esc(d.titelAr) + '</div>' +
+      '<div class="haraka-body">' +
+        '<div class="haraka-name">' + esc(d.titel) + done + '</div>' +
+        '<div class="haraka-desc">' + esc(d.unter) + ' · ' + d.zeilen.length + ' Sätze · ' + d.fragen.length + ' Fragen</div>' +
+      '</div>' +
+      '<span style="color:var(--gold-bright); font-size:1.3rem;">›</span>' +
+    '</button>';
+  }).join('');
+  c.innerHTML = html;
+}
+
+function findDialog(id){
+  for(var i=0;i<DIALOGE.length;i++){ if(DIALOGE[i].id === id) return DIALOGE[i]; }
+  return null;
+}
+
+function openDialog(id){
+  var d = findDialog(id);
+  if(!d) return;
+  aktuellerDialog = d;
+  document.getElementById('dialog-titel-ar').textContent = d.titelAr;
+  document.getElementById('dialog-head').textContent = d.titel;
+  document.getElementById('dialog-unter').textContent = d.unter;
+
+  var body = document.getElementById('dialog-body');
+  body.classList.remove('hide-help');
+  var html = '<div class="dlg-intro">Lies laut mit — tippe ▷, um jeden Satz zu hören.</div>';
+  html += d.zeilen.map(function(z, i){
+    var seite = (z.s === 'A') ? '' : ' b';
+    return '<div class="dlg-line' + seite + '">' +
+      '<div class="dlg-bubble">' +
+        '<div class="dlg-sprecher">' + esc(z.s === 'A' ? 'Person 1' : 'Person 2') + '</div>' +
+        '<div class="dlg-ar">' + esc(z.ar) + '</div>' +
+        '<div class="dlg-tr">' + esc(z.tr) + '</div>' +
+        '<div class="dlg-de">' + esc(z.de) + '</div>' +
+        '<button class="dlg-play" onclick="speakDialogZeile(' + d.id + ',' + i + ')" aria-label="Anhören">▷</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  html += '<div class="dlg-controls">' +
+    '<button class="btn-ghost" onclick="dialogAlleAnhoeren()">▷ Ganzes Gespräch anhören</button>' +
+    '<button class="btn-ghost" id="dlg-help-btn" onclick="toggleDialogHilfe()">Übersetzung ausblenden</button>' +
+  '</div>' +
+  '<div style="text-align:center; margin-top:1.2rem;">' +
+    '<button class="btn-gold" onclick="startDialogQuiz()">Verstanden? → Quiz starten</button>' +
+  '</div>';
+  body.innerHTML = html;
+  go('dialog');
+}
+
+function speakDialogZeile(dialogId, zeilenIdx){
+  var d = findDialog(dialogId);
+  if(d && d.zeilen[zeilenIdx]){ speak(d.zeilen[zeilenIdx].ar); }
+}
+
+function dialogAlleAnhoeren(){
+  if(!aktuellerDialog || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  var voices = window.speechSynthesis.getVoices();
+  var arVoice = null;
+  for(var i=0;i<voices.length;i++){
+    if(voices[i].lang && voices[i].lang.indexOf('ar') === 0){ arVoice = voices[i]; break; }
+  }
+  aktuellerDialog.zeilen.forEach(function(z){
+    var u = new SpeechSynthesisUtterance(z.ar);
+    u.lang = 'ar-SA'; u.rate = 0.75;
+    if(arVoice) u.voice = arVoice;
+    window.speechSynthesis.speak(u);
+  });
+}
+
+function toggleDialogHilfe(){
+  var body = document.getElementById('dialog-body');
+  body.classList.toggle('hide-help');
+  var btn = document.getElementById('dlg-help-btn');
+  if(btn) btn.textContent = body.classList.contains('hide-help') ? 'Übersetzung einblenden' : 'Übersetzung ausblenden';
+}
+
+function startDialogQuiz(){
+  if(!aktuellerDialog) return;
+  exam.fragen = shuffle(aktuellerDialog.fragen).map(function(f){
+    return { typ:f.typ, frage:f.frage, glyph:f.glyph, richtig:f.richtig,
+      optionen: shuffle(f.optionen.slice()), audio:(f.typ === 'wort') ? f.glyph : f.richtig };
+  });
+  exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'dialog';
   go('exercise');
   renderExamQuestion();
 }
@@ -2154,13 +2472,31 @@ function renderExamDone(){
   renderLetters();
   updateDaily();
   syncAfterSession();
-  var msg = (exam.richtig === n)
-    ? 'Makellos! Weiter so.'
-    : 'Gut gemacht — dein Fortschritt wurde gespeichert.';
-  var again = (exam.mode === 'vokabel')
-    ? '<button class="btn-gold" onclick="startVokabelExercise()">Nochmal üben</button>' +
-      '<div style="margin-top:1rem;"><button class="btn-ghost" onclick="go(\'thema\')">Zurück zum Thema</button></div>'
-    : '<button class="btn-gold" onclick="go(\'start\')">Zur Übersicht</button>';
+  var msg;
+  if(exam.mode === 'dialog'){
+    msg = (exam.richtig === n)
+      ? 'Du hast das Gespräch komplett verstanden! ✦'
+      : 'Lies das Gespräch noch einmal — beim zweiten Mal sitzt es.';
+  } else {
+    msg = (exam.richtig === n)
+      ? 'Makellos! Weiter so.'
+      : 'Gut gemacht — dein Fortschritt wurde gespeichert.';
+  }
+  var again;
+  if(exam.mode === 'vokabel'){
+    again = '<button class="btn-gold" onclick="startVokabelExercise()">Nochmal üben</button>' +
+      '<div style="margin-top:1rem;"><button class="btn-ghost" onclick="go(\'thema\')">Zurück zum Thema</button></div>';
+  } else if(exam.mode === 'dialog'){
+    if(aktuellerDialog && exam.richtig === n){
+      dialogeDone.add(aktuellerDialog.id);
+      saveDialogeDone(dialogeDone);
+    }
+    var dId = aktuellerDialog ? aktuellerDialog.id : 0;
+    again = '<button class="btn-gold" onclick="openDialog(' + dId + ')">Zurück zum Gespräch</button>' +
+      '<div style="margin-top:1rem;"><button class="btn-ghost" onclick="go(\'stufe2\')">Alle Gespräche</button></div>';
+  } else {
+    again = '<button class="btn-gold" onclick="go(\'start\')">Zur Übersicht</button>';
+  }
   body.innerHTML =
     '<div class="ex-done">' +
       '<div class="star">✦</div>' +
@@ -2179,6 +2515,7 @@ renderLetters();
 renderHarakat();
 renderWoerter();
 renderThemen();
+renderDialoge();
 initSupabase();
 updateAccountUI();
 if('speechSynthesis' in window){
