@@ -748,6 +748,8 @@
 
       <div id="qawaid-ergebnis"></div>
 
+      <div id="meine-qawaid" style="margin-top:2rem;"></div>
+
       <details style="margin-top:2rem; color:rgba(242,232,208,0.6); font-size:.9rem;">
         <summary style="cursor:pointer; color:var(--gold-bright);">⚙ KI-Einstellungen (für Regeln außerhalb der Bibliothek)</summary>
         <p style="line-height:1.6;">Bekannte Regeln werden aus der eingebauten Bibliothek erklärt. Für alle anderen Regeln kann eine KI (Claude) die Erklärung erzeugen — dafür brauchst du einen eigenen Anthropic-API-Schlüssel. Er wird nur lokal in deinem Browser gespeichert.</p>
@@ -2895,15 +2897,15 @@ var QAWAID_DB = [
       { ar:'السَّلَامُ', tr:'as-salāmu', de:'der Friede (L verschmilzt)' }
     ],
     merke:'14 Sonnenbuchstaben: ت ث د ذ ر ز س ش ص ض ط ظ ل ن — alle werden mit der Zunge vorne gebildet, genau wie das L selbst.' },
-  { namen:['tanwin','nunation','تنوين','unbestimmtheit'],
-    titel:'Tanwin — die Nunation', ar:'التَّنْوِين',
-    erklaerung:'Tanwin ist ein doppeltes Vokalzeichen am Wortende und bedeutet „ein/eine" (unbestimmt). Es gibt drei Arten: -un (Nominativ ٌ), -an (Akkusativ ً, meist mit stummem Alif), -in (Genitiv ٍ). Ein Wort hat NIE gleichzeitig al- und Tanwin.',
+  { namen:['bestimmt','unbestimmt','bestimmtes wort','unbestimmtes wort','bestimmt und unbestimmt','artikel','al','tanwin','nunation','تنوين','المعرفة والنكرة','معرفة','نكرة','maʿrifa','nakira'],
+    titel:'Bestimmt & Unbestimmt — al- und Tanwin', ar:'الْمَعْرِفَةُ وَالنَّكِرَةُ',
+    erklaerung:'Arabisch kennt keinen unbestimmten Artikel („ein/eine"). UNBESTIMMT ist ein Wort mit Tanwin am Ende: -un (ٌ), -an (ً) oder -in (ٍ) — kitābun = ein Buch. BESTIMMT wird ein Wort mit dem Artikel al- (ال) am Anfang: al-kitābu = das Buch. Ein Wort hat NIE gleichzeitig al- und Tanwin — der Artikel ersetzt das Tanwin.',
     beispiele:[
-      { ar:'كِتَابٌ', tr:'kitābun', de:'ein Buch (Nominativ)' },
-      { ar:'قَرَأْتُ كِتَابًا', tr:'qaraʾtu kitāban', de:'Ich las ein Buch. (Akkusativ)' },
-      { ar:'فِي كِتَابٍ', tr:'fī kitābin', de:'in einem Buch (Genitiv)' }
+      { ar:'كِتَابٌ', tr:'kitābun', de:'ein Buch (unbestimmt, mit Tanwin)' },
+      { ar:'الْكِتَابُ', tr:'al-kitābu', de:'das Buch (bestimmt, mit al-)' },
+      { ar:'بَيْتٌ ← الْبَيْتُ', tr:'baitun → al-baitu', de:'ein Haus → das Haus' }
     ],
-    merke:'al- ODER Tanwin — niemals beides: الكتابُ (das Buch) vs. كتابٌ (ein Buch).' },
+    merke:'al- ODER Tanwin — niemals beides. Tanwin = „ein/eine", al- = „der/die/das".' },
   { namen:['verbalsatz','الجملة الفعلية','fiʿl','fail','faa\'il','verb subjekt objekt','satzbau'],
     titel:'Der Verbalsatz', ar:'الْجُمْلَةُ الْفِعْلِيَّةُ',
     erklaerung:'Ein Verbalsatz beginnt mit dem Verb. Die Grundreihenfolge ist: Verb → Subjekt (Fāʿil, Nominativ) → Objekt (Mafʿūl, Akkusativ). Das Verb steht am Satzanfang immer im Singular, auch wenn das Subjekt Plural ist.',
@@ -2911,62 +2913,91 @@ var QAWAID_DB = [
       { ar:'كَتَبَ الطَّالِبُ الدَّرْسَ', tr:'kataba ṭ-ṭālibu d-darsa', de:'Der Schüler schrieb die Lektion.' },
       { ar:'شَرِبَ الْوَلَدُ الْمَاءَ', tr:'schariba l-waladu l-māʾa', de:'Der Junge trank das Wasser.' }
     ],
-    merke:'Reihenfolge: Verb – Wer? (-u) – Wen/Was? (-a).' },
-  { namen:['ta marbuta','ta marbouta','تاء مربوطة','feminin','weiblich','maskulin','geschlecht','genus'],
-    titel:'Maskulin & Feminin — Tāʾ marbūṭa', ar:'التَّاءُ الْمَرْبُوطَة',
-    erklaerung:'Die meisten weiblichen Wörter enden auf Tāʾ marbūṭa (ة), gesprochen als kurzes -a. Adjektive richten sich nach dem Nomen: Ist das Nomen weiblich, bekommt auch das Adjektiv ة. Männliche Wörter haben keine besondere Endung.',
-    beispiele:[
-      { ar:'مُعَلِّمٌ / مُعَلِّمَةٌ', tr:'muʿallimun / muʿallimatun', de:'Lehrer / Lehrerin' },
-      { ar:'سَيَّارَةٌ جَمِيلَةٌ', tr:'sayyāratun dschamīlatun', de:'ein schönes Auto (Auto ist weiblich!)' },
-      { ar:'بَيْتٌ كَبِيرٌ', tr:'baitun kabīrun', de:'ein großes Haus (männlich)' }
-    ],
-    merke:'Siehst du ة am Ende → fast immer weiblich. Adjektiv passt sich an.' },
-  { namen:['dual','muthanna','مثنى','المثنى','zweizahl'],
-    titel:'Der Dual — die Zweizahl', ar:'الْمُثَنَّى',
-    erklaerung:'Für genau ZWEI Dinge hat Arabisch eine eigene Form: Man hängt -āni (نِ + Alif, Nominativ) bzw. -aini (Genitiv/Akkusativ) an. Das Wort „zwei" ist dann meist überflüssig.',
-    beispiele:[
-      { ar:'كِتَابَانِ', tr:'kitābāni', de:'zwei Bücher' },
-      { ar:'بَيْتَانِ كَبِيرَانِ', tr:'baitāni kabīrāni', de:'zwei große Häuser' },
-      { ar:'رَأَيْتُ وَلَدَيْنِ', tr:'raʾaitu waladaini', de:'Ich sah zwei Jungen.' }
-    ],
-    merke:'-āni = zwei (Nominativ), -aini = zwei (Genitiv/Akkusativ).' },
-  { namen:['plural','gebrochener plural','gesunder plural','جمع','الجمع','dschamʿ','mehrzahl'],
-    titel:'Der Plural', ar:'الْجَمْع',
-    erklaerung:'Es gibt zwei Plural-Arten: 1) Der GESUNDE Plural hängt Endungen an: -ūna (männlich, z.B. muʿallimūna) oder -āt (weiblich, z.B. muʿallimāt). 2) Der GEBROCHENE Plural verändert das Wortinnere — den muss man mit jeder Vokabel mitlernen (kitāb → kutub).',
-    beispiele:[
-      { ar:'مُعَلِّمُونَ', tr:'muʿallimūna', de:'Lehrer (Pl., gesund männlich)' },
-      { ar:'طَالِبَاتٌ', tr:'ṭālibātun', de:'Schülerinnen (gesund weiblich)' },
-      { ar:'كِتَابٌ ← كُتُبٌ', tr:'kitāb → kutub', de:'Buch → Bücher (gebrochen)' }
-    ],
-    merke:'Lerne den Plural immer gleich mit der Vokabel — gebrochene Plurale folgen Mustern, aber nicht Regeln.' },
-  { namen:['inna','inna und ihre schwestern','إن وأخواتها','ان واخواتها'],
-    titel:'Inna und ihre Schwestern', ar:'إِنَّ وَأَخَوَاتُهَا',
-    erklaerung:'Inna (fürwahr/dass) und ihre „Schwestern" (anna, lākinna, liʾanna, kaʾanna, laʿalla, laita) stehen vor einem Nominalsatz. Sie setzen den Mubtada in den AKKUSATIV (-a), der Chabar bleibt im Nominativ (-u).',
-    beispiele:[
-      { ar:'إِنَّ الْبَيْتَ كَبِيرٌ', tr:'inna l-baita kabīrun', de:'Fürwahr, das Haus ist groß.' },
-      { ar:'لَعَلَّ الطَّالِبَ نَاجِحٌ', tr:'laʿalla ṭ-ṭāliba nādschiḥun', de:'Hoffentlich ist der Schüler erfolgreich.' }
-    ],
-    merke:'Nach inna: erstes Nomen -a (Akkusativ), Aussage bleibt -u.' },
-  { namen:['kana','kana und ihre schwestern','كان وأخواتها','كان','vergangenheit sein'],
-    titel:'Kāna und ihre Schwestern', ar:'كَانَ وَأَخَوَاتُهَا',
-    erklaerung:'Kāna (er war) macht aus einem Nominalsatz Vergangenheit: „Das Haus ist groß" → „Das Haus WAR groß". Genau umgekehrt zu inna: Der Mubtada bleibt im Nominativ (-u), der Chabar geht in den AKKUSATIV (-a).',
-    beispiele:[
-      { ar:'كَانَ الْبَيْتُ كَبِيرًا', tr:'kāna l-baitu kabīran', de:'Das Haus war groß.' },
-      { ar:'كَانَ الطَّالِبُ مُجْتَهِدًا', tr:'kāna ṭ-ṭālibu mudschtahidan', de:'Der Schüler war fleißig.' }
-    ],
-    merke:'kāna: Aussage -a. inna: erstes Nomen -a. Merksatz: Sie tauschen die Rollen.' },
-  { namen:['adjektiv','attribut','naʿt','sifa','النعت','الصفة','eigenschaft'],
-    titel:'Das Adjektiv als Attribut (Naʿt)', ar:'النَّعْتُ / الصِّفَةُ',
-    erklaerung:'Das Adjektiv steht NACH dem Nomen und richtet sich in vier Dingen nach ihm: Geschlecht, Zahl, Fall und Bestimmtheit. „Das große Haus" heißt wörtlich „das Haus das-große".',
-    beispiele:[
-      { ar:'الْبَيْتُ الْكَبِيرُ', tr:'al-baitu l-kabīru', de:'das große Haus' },
-      { ar:'بَيْتٌ كَبِيرٌ', tr:'baitun kabīrun', de:'ein großes Haus' },
-      { ar:'سَيَّارَةٌ جَدِيدَةٌ', tr:'sayyāratun dschadīdatun', de:'ein neues Auto (weiblich!)' }
-    ],
-    merke:'Nomen bestimmt (al-) → Adjektiv auch al-. Nomen mit Tanwin → Adjektiv auch Tanwin.' }
+    merke:'Reihenfolge: Verb – Wer? (-u) – Wen/Was? (-a).' }
 ];
 
 var QAWAID_KEY_STORE = 'almiftah_anthropic_key';
+
+/* --- Eigene Regeln: von der KI erklärt, dauerhaft lokal gespeichert.
+       Einmal erklärt = immer abrufbar, ganz ohne KI. --- */
+var MEINE_QAWAID_STORE = 'almiftah_meine_qawaid';
+function ladeMeineQawaid(){
+  try { return JSON.parse(localStorage.getItem(MEINE_QAWAID_STORE) || '[]'); }
+  catch(e){ return []; }
+}
+function speichereMeineQawaid(liste){
+  try { localStorage.setItem(MEINE_QAWAID_STORE, JSON.stringify(liste)); } catch(e){}
+}
+var meineQawaid = ladeMeineQawaid();
+
+function findeGespeicherteRegel(eingabe){
+  var q = qawaidNormalisiere(eingabe);
+  if(!q) return null;
+  for(var i=0;i<meineQawaid.length;i++){
+    if(qawaidNamePasst(qawaidNormalisiere(meineQawaid[i].name), q)) return meineQawaid[i];
+  }
+  return null;
+}
+
+function speichereKiRegel(name, text){
+  // Falls die Regel schon existiert: Erklärung aktualisieren statt doppelt speichern
+  var q = qawaidNormalisiere(name);
+  for(var i=0;i<meineQawaid.length;i++){
+    if(qawaidNormalisiere(meineQawaid[i].name) === q){
+      meineQawaid[i].text = text;
+      meineQawaid[i].datum = new Date().toISOString();
+      speichereMeineQawaid(meineQawaid);
+      renderMeineQawaid();
+      return;
+    }
+  }
+  meineQawaid.push({ name: name, text: text, datum: new Date().toISOString() });
+  speichereMeineQawaid(meineQawaid);
+  renderMeineQawaid();
+}
+
+function renderGespeicherteRegel(r){
+  var datum = r.datum ? new Date(r.datum).toLocaleDateString('de-DE') : '';
+  return '<div class="qawaid-antwort">' +
+    '<h3>' + esc(r.name) + '</h3>' +
+    '<p style="white-space:pre-wrap;">' + esc(r.text) + '</p>' +
+    '<p style="font-size:.8rem; color:rgba(242,232,208,0.5); margin-top:1rem;">— gespeicherte Erklärung' + (datum ? ' vom ' + datum : '') + ' · jederzeit ohne KI abrufbar</p>' +
+  '</div>';
+}
+
+function zeigeGespeicherteRegel(idx){
+  var r = meineQawaid[idx];
+  if(!r) return;
+  var box = document.getElementById('qawaid-ergebnis');
+  if(box){ box.innerHTML = renderGespeicherteRegel(r); }
+  window.scrollTo(0, 0);
+}
+
+function loescheGespeicherteRegel(idx){
+  var r = meineQawaid[idx];
+  if(!r) return;
+  if(!confirm('Regel „' + r.name + '" wirklich löschen?')) return;
+  meineQawaid.splice(idx, 1);
+  speichereMeineQawaid(meineQawaid);
+  renderMeineQawaid();
+}
+
+function renderMeineQawaid(){
+  var c = document.getElementById('meine-qawaid');
+  if(!c) return;
+  if(meineQawaid.length === 0){ c.innerHTML = ''; return; }
+  c.innerHTML = '<div class="group-head"><span class="group-title">Meine Regeln</span>' +
+    '<span class="group-num">' + meineQawaid.length + ' gespeichert</span></div>' +
+    '<p style="font-size:.85rem; color:rgba(242,232,208,0.55); font-style:italic; margin:.2rem 0 .8rem;">Von der KI erklärt und dauerhaft gespeichert — abrufbar ohne KI.</p>' +
+    meineQawaid.map(function(r, i){
+      return '<div class="haraka-card">' +
+        '<button style="all:unset; cursor:pointer; flex:1;" onclick="zeigeGespeicherteRegel(' + i + ')">' +
+          '<span class="haraka-name">' + esc(r.name) + '</span>' +
+        '</button>' +
+        '<button class="haraka-listen" style="border-color:rgba(227,128,111,0.4); color:var(--red-soft);" onclick="loescheGespeicherteRegel(' + i + ')" aria-label="Löschen">✕</button>' +
+      '</div>';
+    }).join('');
+}
 
 function saveQawaidKey(){
   var val = document.getElementById('qawaid-api-key').value.trim();
@@ -2980,7 +3011,17 @@ function qawaidNormalisiere(s){
   return normAr(String(s || '')).toLowerCase()
     .replace(/[āâ]/g,'a').replace(/[īî]/g,'i').replace(/[ūû]/g,'u')
     .replace(/[ḍḏ]/g,'d').replace(/[ṭṯ]/g,'t').replace(/[ṣš]/g,'s').replace(/ḥ/g,'h').replace(/[ʿʾ'`’]/g,'')
+    .replace(/[-_/.,؟?!]/g,' ')
     .replace(/\s+/g,' ').trim();
+}
+
+// Exakter Treffer immer; Teiltreffer nur bei genug Länge (sonst matcht z.B. "al" überall)
+function qawaidNamePasst(n, q){
+  if(!n || !q) return false;
+  if(n === q) return true;
+  if(n.length >= 4 && q.indexOf(n) >= 0) return true;
+  if(q.length >= 4 && n.indexOf(q) >= 0) return true;
+  return false;
 }
 
 function findeRegel(eingabe){
@@ -2989,8 +3030,7 @@ function findeRegel(eingabe){
   for(var i=0;i<QAWAID_DB.length;i++){
     var r = QAWAID_DB[i];
     for(var j=0;j<r.namen.length;j++){
-      var n = qawaidNormalisiere(r.namen[j]);
-      if(n === q || n.indexOf(q) >= 0 || q.indexOf(n) >= 0) return r;
+      if(qawaidNamePasst(qawaidNormalisiere(r.namen[j]), q)) return r;
     }
   }
   return null;
@@ -3016,18 +3056,27 @@ function qawaidErklaeren(){
   var box = document.getElementById('qawaid-ergebnis');
   if(!eingabe){ box.innerHTML = ''; return; }
 
+  // 1. Eingebaute Grundregeln
   var regel = findeRegel(eingabe);
   if(regel){
     box.innerHTML = renderRegel(regel);
     return;
   }
 
+  // 2. Bereits gespeicherte KI-Erklärungen — kein erneuter KI-Aufruf nötig
+  var gespeichert = findeGespeicherteRegel(eingabe);
+  if(gespeichert){
+    box.innerHTML = renderGespeicherteRegel(gespeichert);
+    return;
+  }
+
+  // 3. Neu: KI fragen (und danach dauerhaft speichern)
   var key = localStorage.getItem(QAWAID_KEY_STORE) || '';
   if(!key){
     box.innerHTML = '<div class="qawaid-antwort">' +
-      '<p>Diese Regel ist noch nicht in der eingebauten Bibliothek. ' +
-      'Verfügbare Regeln: ' + QAWAID_DB.map(function(r){ return esc(r.titel.split('—')[0].trim()); }).join(' · ') + '.</p>' +
-      '<p style="margin-top:.6rem;">Für alle anderen Regeln kannst du unter „⚙ KI-Einstellungen" einen Anthropic-API-Schlüssel hinterlegen — dann erklärt dir die KI jede Regel.</p>' +
+      '<p>Diese Regel ist noch nicht gespeichert. Eingebaute Grundregeln: ' +
+      QAWAID_DB.map(function(r){ return esc(r.titel.split('—')[0].trim()); }).join(' · ') + '.</p>' +
+      '<p style="margin-top:.6rem;">Um neue Regeln einzutragen, hinterlege unter „⚙ KI-Einstellungen" einen Anthropic-API-Schlüssel. Die KI erklärt die Regel dann einmal — danach ist sie dauerhaft unter „Meine Regeln" gespeichert und ohne KI abrufbar.</p>' +
     '</div>';
     return;
   }
@@ -3055,10 +3104,11 @@ function qawaidErklaeren(){
     var text = '';
     (data.content || []).forEach(function(b){ if(b.type === 'text') text += b.text; });
     if(!text){ throw new Error('leere Antwort'); }
+    speichereKiRegel(eingabe, text);
     box.innerHTML = '<div class="qawaid-antwort">' +
       '<h3>' + esc(eingabe) + '</h3>' +
       '<p style="white-space:pre-wrap;">' + esc(text) + '</p>' +
-      '<p style="font-size:.8rem; color:rgba(242,232,208,0.5); margin-top:1rem;">— erklärt von Claude (KI)</p>' +
+      '<p style="font-size:.8rem; color:rgba(242,232,208,0.5); margin-top:1rem;">— erklärt von Claude (KI) · ✓ unter „Meine Regeln" gespeichert, ab jetzt ohne KI abrufbar</p>' +
     '</div>';
   }).catch(function(err){
     var msg = String(err && err.message || err);
@@ -3092,6 +3142,7 @@ initSupabase();
 updateAccountUI();
 updateNotifyBtn();
 renderQawaidVorschlaege();
+renderMeineQawaid();
 (function(){
   var k = localStorage.getItem(QAWAID_KEY_STORE);
   var inp = document.getElementById('qawaid-api-key');
