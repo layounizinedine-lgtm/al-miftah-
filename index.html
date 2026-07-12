@@ -873,7 +873,11 @@
 
       <button class="btn-gold auth-submit" id="auth-submit" onclick="submitAuth()">Anmelden</button>
 
-      <div class="auth-switch">
+      <div style="text-align:center; margin-top:.9rem;" id="auth-forgot-row">
+        <button class="auth-link" id="auth-forgot-btn" onclick="forgotPassword()">Passwort vergessen?</button>
+      </div>
+
+      <div class="auth-switch" id="auth-switch-row">
         <span id="auth-switch-text">Noch kein Konto?</span>
         <button class="auth-link" id="auth-switch-btn" onclick="toggleAuthMode()">Registrieren</button>
       </div>
@@ -921,9 +925,11 @@ function initSupabase(){
         }
         updateAccountUI();
       });
-      supa.auth.onAuthStateChange(function(_evt, session){
+      supa.auth.onAuthStateChange(function(evt, session){
         currentUser = session ? { id: session.user.id, email: session.user.email } : null;
         updateAccountUI();
+        // Nutzer kommt über den "Passwort vergessen"-Link aus der E-Mail zurück
+        if(evt === 'PASSWORD_RECOVERY'){ openPasswortReset(); }
       });
     }
   } catch(e){ /* offline oder Lib nicht geladen — App läuft lokal weiter */ }
@@ -936,10 +942,29 @@ function openAuth(){
     if(confirm('Als ' + currentUser.email + ' angemeldet.\nMöchtest du dich abmelden?')){ logout(); }
     return;
   }
+  resetAuthUi();
   document.getElementById('auth-overlay').classList.add('active');
   setAuthError('');
 }
-function closeAuth(){ document.getElementById('auth-overlay').classList.remove('active'); }
+function closeAuth(){
+  document.getElementById('auth-overlay').classList.remove('active');
+  if(authMode === 'reset'){ authMode = 'login'; resetAuthUi(); }
+}
+// Formular in den normalen Anmelde-Zustand zurücksetzen (nach Reset-Modus)
+function resetAuthUi(){
+  var emailFeld = document.getElementById('auth-email').parentElement;
+  emailFeld.style.display = '';
+  document.getElementById('auth-forgot-row').style.display = '';
+  document.getElementById('auth-switch-row').style.display = '';
+  document.getElementById('auth-pass').value = '';
+  var lbl = document.querySelector('label[for="auth-pass"]');
+  if(lbl) lbl.textContent = 'Passwort';
+  document.getElementById('auth-title').textContent = (authMode==='signup') ? 'Registrieren' : 'Anmelden';
+  document.getElementById('auth-submit').textContent = (authMode==='signup') ? 'Konto erstellen' : 'Anmelden';
+  document.getElementById('auth-intro').textContent = (authMode==='signup')
+    ? 'Erstelle ein Konto, damit dein Fortschritt sicher in der Cloud liegt.'
+    : 'Melde dich an, damit dein Fortschritt geräteübergreifend gespeichert wird.';
+}
 function toggleAuthMode(){
   authMode = (authMode === 'login') ? 'signup' : 'login';
   document.getElementById('auth-title').textContent = (authMode==='login') ? 'Anmelden' : 'Registrieren';
@@ -951,13 +976,75 @@ function toggleAuthMode(){
     : 'Erstelle ein Konto, damit dein Fortschritt sicher in der Cloud liegt.';
   setAuthError('');
 }
-function setAuthError(msg){ document.getElementById('auth-error').textContent = msg || ''; }
+function setAuthError(msg, istErfolg){
+  var el = document.getElementById('auth-error');
+  el.textContent = msg || '';
+  el.style.color = istErfolg ? 'var(--gold-bright)' : '';
+}
+
+/* ---------- Passwort vergessen ---------- */
+function forgotPassword(){
+  if(!supa){ setAuthError('Keine Verbindung zum Server. Bist du online?'); return; }
+  var email = document.getElementById('auth-email').value.trim();
+  if(!email){ setAuthError('Gib oben deine E-Mail-Adresse ein — dann schicken wir dir einen Link zum Zurücksetzen.'); return; }
+  var btn = document.getElementById('auth-forgot-btn');
+  if(btn){ btn.disabled = true; btn.textContent = 'Moment…'; }
+  supa.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin + window.location.pathname
+  }).then(function(res){
+    if(btn){ btn.disabled = false; btn.textContent = 'Passwort vergessen?'; }
+    if(res.error){ setAuthError(uebersetzeAuthFehler(res.error.message)); return; }
+    setAuthError('✓ E-Mail ist unterwegs! Öffne den Link darin — dann kannst du hier ein neues Passwort setzen. (Schau auch im Spam-Ordner nach.)', true);
+  }, function(){
+    if(btn){ btn.disabled = false; btn.textContent = 'Passwort vergessen?'; }
+    setAuthError('Etwas ist schiefgelaufen. Versuch es nochmal.');
+  });
+}
+
+/* ---------- Neues Passwort setzen (nach Klick auf den E-Mail-Link) ---------- */
+function openPasswortReset(){
+  authMode = 'reset';
+  document.getElementById('auth-overlay').classList.add('active');
+  document.getElementById('auth-title').textContent = 'Neues Passwort';
+  document.getElementById('auth-intro').textContent = 'Wähle jetzt ein neues Passwort für dein Konto.';
+  document.getElementById('auth-submit').textContent = 'Passwort speichern';
+  document.getElementById('auth-email').parentElement.style.display = 'none';
+  document.getElementById('auth-forgot-row').style.display = 'none';
+  document.getElementById('auth-switch-row').style.display = 'none';
+  document.getElementById('auth-pass').value = '';
+  var lbl = document.querySelector('label[for="auth-pass"]');
+  if(lbl) lbl.textContent = 'Neues Passwort';
+  setAuthError('');
+}
 
 function submitAuth(){
   if(authBusy) return;
   if(!supa){ setAuthError('Keine Verbindung zum Server. Bist du online?'); return; }
-  var email = document.getElementById('auth-email').value.trim();
   var pass = document.getElementById('auth-pass').value;
+
+  // Reset-Modus: nur neues Passwort speichern
+  if(authMode === 'reset'){
+    if(pass.length < 6){ setAuthError('Das Passwort braucht mindestens 6 Zeichen.'); return; }
+    authBusy = true;
+    var rbtn = document.getElementById('auth-submit');
+    rbtn.disabled = true; rbtn.textContent = 'Moment…';
+    supa.auth.updateUser({ password: pass }).then(function(res){
+      authBusy = false; rbtn.disabled = false; rbtn.textContent = 'Passwort speichern';
+      if(res.error){ setAuthError(uebersetzeAuthFehler(res.error.message)); return; }
+      authMode = 'login';
+      resetAuthUi();
+      closeAuth();
+      alert('Dein Passwort wurde geändert. Du bist jetzt angemeldet. ✦');
+      onLoggedIn();
+      updateAccountUI();
+    }, function(){
+      authBusy = false; rbtn.disabled = false; rbtn.textContent = 'Passwort speichern';
+      setAuthError('Etwas ist schiefgelaufen. Versuch es nochmal.');
+    });
+    return;
+  }
+
+  var email = document.getElementById('auth-email').value.trim();
   if(!email || !pass){ setAuthError('Bitte E-Mail und Passwort eingeben.'); return; }
   if(pass.length < 6){ setAuthError('Das Passwort braucht mindestens 6 Zeichen.'); return; }
 
