@@ -2005,11 +2005,13 @@ function renderThemen(){
     '<p style="font-size:.9rem; color:rgba(242,232,208,0.65); font-style:italic; margin:.2rem 0 1rem;">Wähle ein Themenfeld und lerne seine Wörter — sie tauchen in den Gesprächen wieder auf.</p>';
   c.innerHTML = kopf + VOKAB_THEMEN.map(function(t){
     var gelernt = t.vocab.filter(function(v){ var it = srsData['v:'+v.id]; return it && it.box >= 4; }).length;
+    var icon = t.icon || t.vocab[0].arabic.charAt(0);
+    var lekN = t.lektionen ? t.lektionen.length + ' Lektionen · ' : '';
     return '<button class="haraka-card stop-clickable" style="width:100%; text-align:left; cursor:pointer;" onclick="openThema(' + t.id + ')">' +
-      '<div class="haraka-glyph" style="font-size:1.6rem;">' + esc(t.vocab[0].arabic.charAt(0)) + '</div>' +
+      '<div class="haraka-glyph" style="width:auto; min-width:76px; padding:0 .5rem; font-size:1.25rem;">' + esc(icon) + '</div>' +
       '<div class="haraka-body">' +
-        '<div class="haraka-name">' + esc(t.name) + '</div>' +
-        '<div class="haraka-desc">' + t.vocab.length + ' Wörter · ' + gelernt + ' im Gedächtnis</div>' +
+        '<div class="haraka-name">' + esc(t.name) + (t.nameAr ? ' <span class="haraka-ex-tr" style="font-size:.9rem;">' + esc(t.nameAr) + '</span>' : '') + '</div>' +
+        '<div class="haraka-desc">' + t.vocab.length + ' Wörter · ' + lekN + gelernt + ' im Gedächtnis</div>' +
       '</div>' +
       '<span style="color:var(--gold-bright); font-size:1.3rem;">›</span>' +
     '</button>';
@@ -2030,6 +2032,7 @@ function openThema(id){
   if(!aktuellesThema) return;
   document.getElementById('thema-head').textContent = aktuellesThema.name;
   document.getElementById('thema-titel-de').textContent = aktuellesThema.name;
+  if(aktuellesThema.nameAr){ document.getElementById('thema-titel-ar').textContent = aktuellesThema.nameAr; }
   renderThemaWoerter();
   go('thema');
 }

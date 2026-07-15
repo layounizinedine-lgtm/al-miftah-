@@ -11,7 +11,7 @@
 | AP | Status | Commit / Notiz |
 |---|---|---|
 | **0.1 — Bugfixes** | ☑ erledigt | B1b, B2, B3, B4, B5, B6, B8 gefixt & im Browser verifiziert. **B9 bewusst nach AP 3.1 verschoben** (braucht Supabase-Zugang / eigene `exam_data`-Spalte; ohne DB-Zugang kein sinnvoller Fix — Plan sah das bereits als „langfristig AP 3.1" vor). B1a (Daten-Duplikate physisch entfernen) + B7 (SM-2-Altlasten streichen) laufen planmäßig in **AP 0.2**; der Code-seitige Dedupe-Schutz (B1b) verhindert die Doppel-Optionen bereits jetzt. |
-| 0.2 — Datenbereinigung | ☐ offen | — |
+| **0.2 — Datenbereinigung** | ☑ erledigt | `vokabeln.js` neu generiert (Skript: `scratchpad/build-vokabeln.js`): 9 Duplikate entfernt (228→**219 Wörter**), alle SM-2-Altlastfelder + `harakat`/`oppHarakat`/`pluralHarakat` gestrichen. Wörter in **10 benannte Themen** umsortiert (je `id, name, nameAr, icon, lektionen`); jedes Thema in Lektionen à **7–9 Wörter** portioniert (verifiziert). `renderThemen`/`openThema` nutzen die neuen Felder. Themen: Begrüßung 14 · Familie 30 · Schule 22 · Haus 18 · Möbel 27 · Wohnungssuche 14 · Stadt 31 · Arbeit 14 · Zeit 21 · Eigenschaften 28. |
 | 0.3 — Modularisierung | ☐ offen | — |
 | 0.4 — Test/Deploy-Fundament | ☐ offen | — |
 | 0.5 — RTL/A11y | ☐ offen | — |
