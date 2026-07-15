@@ -682,7 +682,7 @@
   <!-- ============ VIEW: EXERCISE ============ -->
   <section id="view-exercise" class="view">
     <div class="topbar">
-      <button class="btn-ghost" onclick="go('letters')">‹ Buchstaben</button>
+      <button class="btn-ghost" onclick="exBack()">‹ Zurück</button>
       <div style="text-align:right;">
         <h2>تمرين</h2>
         <div class="sub">Übung</div>
@@ -1098,6 +1098,14 @@ function speak(text){
   window.speechSynthesis.speak(u);
 }
 
+// Audio erst nach echter Nutzer-Geste automatisch abspielen (iOS-sicher)
+var audioUnlocked = false;
+document.addEventListener('click', function(e){
+  audioUnlocked = true;
+  var t = e.target && e.target.closest ? e.target.closest('[data-say]') : null;
+  if(t){ speak(t.getAttribute('data-say')); }
+});
+
 /* ============================================================
    RENDER: PATH (levels) — used on intro + start
    ============================================================ */
@@ -1214,7 +1222,7 @@ function openLetter(ch){
     '<div class="detail-name">' + l.name + '</div>' +
     '<div class="detail-translit">' + l.tr + '</div>' +
     '<p class="detail-sound">' + l.sound + '</p>' +
-    '<button class="btn-gold listen-btn" onclick="speak(\'' + ch + '\')">▷ Anhören</button>' +
+    '<button class="btn-gold listen-btn" data-say="' + esc(ch) + '">▷ Anhören</button>' +
     '<div class="forms-title">— Formen im Wort —</div>' +
     formsBlock +
     '<div style="text-align:center; margin-top:2rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">' +
@@ -1258,7 +1266,6 @@ function loadSRS(){
 }
 function saveSRS(){
   try { localStorage.setItem(SRS_KEY, JSON.stringify(srsData)); } catch(e){}
-  // Supabase-Sync-Haken (kommt als Nächstes): syncProgress(srsData);
 }
 function srsItem(ch){
   if(!srsData[ch]) srsData[ch] = { box:1, due:0, seen:false };
@@ -1314,7 +1321,6 @@ function buildDailySession(){
   if(deck.length === 0){ deck = shuffle(alleSrsItems()).slice(0, 8); }
   return deck.map(itemZuFrage);
 }
-function dailyCount(){ return srsDue().length + srsNew(5).length; }
 
 function updateDaily(){
   var dueN = srsDue().length;
@@ -1339,7 +1345,10 @@ function updateDaily(){
 var exQuestions = [];
 var exIndex = 0;
 var exCorrect = 0;
-var exMode = 'free'; // 'free' | 'srs'
+var exRichtigIdx = 0;
+var haRichtigIdx = 0;
+var woRichtigIdx = 0;
+var hoRichtigIdx = 0;
 
 function shuffle(a){
   a = a.slice();
@@ -1347,8 +1356,11 @@ function shuffle(a){
   return a;
 }
 
+var exerciseReturnView = 'letters';
+function exBack(){ go(exerciseReturnView || 'letters'); }
+
 function startExercise(){
-  exMode = 'free';
+  exerciseReturnView = 'letters';
   exQuestions = shuffle(ALL_LETTERS).slice(0, 10);
   exIndex = 0; exCorrect = 0;
   go('exercise');
@@ -1356,6 +1368,7 @@ function startExercise(){
 }
 
 function startDaily(){
+  exerciseReturnView = 'start';
   exam.fragen = buildDailySession();
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'daily';
   go('exercise');
@@ -1369,6 +1382,7 @@ function renderQuestion(){
 
   var others = shuffle(ALL_LETTERS.filter(function(l){ return l.ch !== q.ch; })).slice(0,3);
   var options = shuffle([q].concat(others));
+  exRichtigIdx = options.indexOf(q);
   var pct = Math.round((exIndex / exQuestions.length) * 100);
 
   body.innerHTML =
@@ -1376,19 +1390,20 @@ function renderQuestion(){
     '<div class="ex-question">Welcher Buchstabe ist das?</div>' +
     '<div class="ex-glyph">' + q.ch + '</div>' +
     '<div class="ex-options">' +
-      options.map(function(o){
-        return '<button class="ex-option" onclick="answer(\'' + o.ch + '\',\'' + q.ch + '\', this)">' + o.name + '</button>';
+      options.map(function(o, idx){
+        return '<button class="ex-option" data-idx="' + idx + '" onclick="answer(this)">' + esc(o.name) + '</button>';
       }).join('') +
     '</div>' +
     '<div class="ex-feedback" id="ex-feedback"></div>';
 }
 
-function answer(chosen, correct, btn){
+function answer(btn){
+  var q = exQuestions[exIndex];
+  var correct = q.ch;
   var buttons = document.querySelectorAll('.ex-option');
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
-  var correctLetter = findLetter(correct);
-  var isRight = (chosen === correct);
+  var isRight = (parseInt(btn.getAttribute('data-idx'), 10) === exRichtigIdx);
 
   if(isRight){
     btn.classList.add('correct');
@@ -1398,13 +1413,10 @@ function answer(chosen, correct, btn){
     doneLetters.add(correct); saveDone(doneLetters);
   } else {
     btn.classList.add('wrong');
-    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === correctLetter.name) buttons[j].classList.add('correct'); }
-    fb.textContent = 'Das war ' + correctLetter.name;
+    if(buttons[exRichtigIdx]) buttons[exRichtigIdx].classList.add('correct');
+    fb.textContent = 'Das war ' + findLetter(correct).name;
     fb.className = 'ex-feedback bad';
   }
-
-  // SRS-Bewertung nur im Wiederholungs-Modus
-  if(exMode === 'srs'){ srsGrade(correct, isRight); }
 
   speak(correct);
   setTimeout(function(){ exIndex++; renderQuestion(); }, 1400);
@@ -1417,19 +1429,12 @@ function renderExDone(){
   syncAfterSession();
   var perfect = (exCorrect === exQuestions.length);
   var msg = perfect ? 'Makellos! Du kennst diese Buchstaben.' : 'Gut gemacht — Wiederholung festigt das Wissen.';
-  var sub = (exMode === 'srs')
-    ? '<p style="color:rgba(242,232,208,0.6); font-style:italic; margin-top:-.6rem;">Dein Fortschritt wurde gespeichert. Die Buchstaben kehren zum richtigen Zeitpunkt zurück.</p>'
-    : '';
-  var again = (exMode === 'srs')
-    ? '<button class="btn-gold" onclick="go(\'start\')">Zur Übersicht</button>'
-    : '<button class="btn-gold" onclick="startExercise()">Nochmal üben</button>';
   body.innerHTML =
     '<div class="ex-done">' +
       '<div class="star">✦</div>' +
       '<h2>' + exCorrect + ' von ' + exQuestions.length + ' richtig</h2>' +
       '<p>' + msg + '</p>' +
-      sub +
-      again +
+      '<button class="btn-gold" onclick="startExercise()">Nochmal üben</button>' +
       '<div style="margin-top:1rem;">' +
         '<button class="btn-ghost" onclick="go(\'letters\')">Zurück zu den Buchstaben</button>' +
       '</div>' +
@@ -1445,6 +1450,7 @@ var writeDrawing = false;
 var wLast = null;
 var backCanvas, frontCanvas, bctx, fctx;
 var letterMaskIdx = [];
+var letterMaskFlag = null;
 var letterMaskTotal = 0;
 var writeReady = false;
 
@@ -1511,26 +1517,33 @@ function computeMask(ch){
   mc.fillText(ch, WSIZE/2, WSIZE/2 + 8);
   var data = mc.getImageData(0,0,WSIZE,WSIZE).data;
   letterMaskIdx = [];
+  letterMaskFlag = new Uint8Array(WSIZE*WSIZE);
   for(var y=0; y<WSIZE; y+=3){
     for(var x=0; x<WSIZE; x+=3){
       var i = (y*WSIZE + x)*4;
-      if(data[i+3] > 80){ letterMaskIdx.push(y*WSIZE + x); }
+      if(data[i+3] > 80){ var mi = y*WSIZE + x; letterMaskIdx.push(mi); letterMaskFlag[mi] = 1; }
     }
   }
   letterMaskTotal = letterMaskIdx.length;
 }
 
 function updateCoverage(){
-  if(!letterMaskTotal) return;
+  if(!letterMaskTotal || !letterMaskFlag) return;
   var data = fctx.getImageData(0,0,WSIZE,WSIZE).data;
-  var covered = 0;
-  for(var k=0; k<letterMaskIdx.length; k++){
-    if(data[letterMaskIdx[k]*4 + 3] > 0) covered++;
+  var paintedTotal = 0, paintedInMask = 0;
+  for(var y=0; y<WSIZE; y+=3){
+    for(var x=0; x<WSIZE; x+=3){
+      var mi = y*WSIZE + x;
+      if(data[mi*4 + 3] > 0){ paintedTotal++; if(letterMaskFlag[mi]) paintedInMask++; }
+    }
   }
-  var pct = Math.round(covered / letterMaskTotal * 100);
-  setCoverage(pct);
+  var hitRatio = paintedInMask / letterMaskTotal;                                  // Anteil der Maske, der getroffen wurde
+  var strayRatio = paintedTotal > 0 ? (paintedTotal - paintedInMask) / paintedTotal : 0; // Anteil, der daneben liegt
+  var score = Math.max(0, hitRatio - strayRatio);                                  // Präzision (λ=1): Danebenmalen zählt gegen dich
+  setCoverage(Math.round(score * 100));
   var fb = document.getElementById('write-feedback');
-  if(pct >= 35){ fb.textContent = 'Schön nachgezeichnet ✦'; fb.className = 'write-feedback good'; }
+  if(hitRatio >= 0.6 && strayRatio <= 0.25){ fb.textContent = 'Schön nachgezeichnet ✦'; fb.className = 'write-feedback good'; }
+  else if(strayRatio > 0.4){ fb.textContent = 'Bleib auf der Buchstabenform ✦'; fb.className = 'write-feedback'; }
   else { fb.textContent = '·'; fb.className = 'write-feedback'; }
 }
 
@@ -1619,7 +1632,7 @@ function renderHarakat(){
         '<div class="haraka-desc">' + esc(h.desc) + '</div>' +
         '<div class="haraka-hilfe">✦ ' + esc(h.hilfe) + '</div>' +
       '</div>' +
-      '<button class="haraka-listen" onclick="speak(\'' + h.beispiel + '\')" aria-label="Anhören">▷</button>' +
+      '<button class="haraka-listen" data-say="' + esc(h.beispiel) + '" aria-label="Anhören">▷</button>' +
     '</div>';
   });
   c.innerHTML = html;
@@ -1671,6 +1684,7 @@ function buildHaQuestion(){
 }
 
 function startHarakatExercise(){
+  exerciseReturnView = 'harakat';
   haQuestions = [];
   for(var i=0;i<12;i++){ haQuestions.push(buildHaQuestion()); }
   haIndex = 0; haCorrect = 0;
@@ -1682,6 +1696,7 @@ function renderHaQuestion(){
   var body = document.getElementById('exercise-body');
   if(haIndex >= haQuestions.length){ renderHaDone(); return; }
   var q = haQuestions[haIndex];
+  haRichtigIdx = q.optionen.indexOf(q.richtig);
   var pct = Math.round((haIndex / haQuestions.length) * 100);
 
   body.innerHTML =
@@ -1689,27 +1704,27 @@ function renderHaQuestion(){
     '<div class="ex-question">Wie wird das ausgesprochen?</div>' +
     '<div class="ex-glyph">' + esc(q.anzeige) + '</div>' +
     '<div class="ex-options">' +
-      q.optionen.map(function(o){
-        return '<button class="ex-option" onclick="haAnswer(\'' + esc(o) + '\', this)">' + esc(o) + '</button>';
+      q.optionen.map(function(o, idx){
+        return '<button class="ex-option" data-idx="' + idx + '" onclick="haAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
     '<div class="ex-feedback" id="ex-feedback"></div>';
 }
 
-function haAnswer(chosen, btn){
+function haAnswer(btn){
   var q = haQuestions[haIndex];
   var buttons = document.querySelectorAll('.ex-option');
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
 
-  if(chosen === q.richtig){
+  if(parseInt(btn.getAttribute('data-idx'), 10) === haRichtigIdx){
     btn.classList.add('correct');
     haCorrect++;
     fb.textContent = 'Richtig ✦';
     fb.className = 'ex-feedback good';
   } else {
     btn.classList.add('wrong');
-    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.richtig) buttons[j].classList.add('correct'); }
+    if(buttons[haRichtigIdx]) buttons[haRichtigIdx].classList.add('correct');
     fb.textContent = 'Das war „' + q.richtig + '"';
     fb.className = 'ex-feedback bad';
   }
@@ -1791,7 +1806,7 @@ function renderWoerter(){
           '<div><span class="haraka-name">' + esc(w.tr) + '</span>' +
           ' <span class="haraka-ex-tr">— ' + esc(w.de) + '</span></div>' +
         '</div>' +
-        '<button class="haraka-listen" onclick="speak(\'' + w.ar + '\')" aria-label="Anhören">▷</button>' +
+        '<button class="haraka-listen" data-say="' + esc(w.ar) + '" aria-label="Anhören">▷</button>' +
       '</div>';
     }).join('');
     return '<div class="group">' +
@@ -1808,6 +1823,7 @@ var woIndex = 0;
 var woCorrect = 0;
 
 function startWoerterExercise(){
+  exerciseReturnView = 'woerter';
   woQuestions = shuffle(ALLE_WOERTER).slice(0, 10);
   woIndex = 0; woCorrect = 0;
   go('exercise');
@@ -1819,6 +1835,7 @@ function renderWoQuestion(){
   if(woIndex >= woQuestions.length){ renderWoDone(); return; }
   var q = woQuestions[woIndex];
   var optionen = shuffle([q.tr].concat(q.falsch));
+  woRichtigIdx = optionen.indexOf(q.tr);
   var pct = Math.round((woIndex / woQuestions.length) * 100);
 
   body.innerHTML =
@@ -1826,8 +1843,8 @@ function renderWoQuestion(){
     '<div class="ex-question">Wie liest man das?</div>' +
     '<div class="ex-glyph" style="font-size:clamp(3.5rem, 16vw, 6rem);">' + esc(q.ar) + '</div>' +
     '<div class="ex-options" style="grid-template-columns:1fr;">' +
-      optionen.map(function(o){
-        return '<button class="ex-option" onclick="woAnswer(this)">' + esc(o) + '</button>';
+      optionen.map(function(o, idx){
+        return '<button class="ex-option" data-idx="' + idx + '" onclick="woAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
     '<div class="ex-feedback" id="ex-feedback"></div>';
@@ -1835,19 +1852,18 @@ function renderWoQuestion(){
 
 function woAnswer(btn){
   var q = woQuestions[woIndex];
-  var chosen = btn.textContent;
   var buttons = document.querySelectorAll('.ex-option');
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
 
-  if(chosen === q.tr){
+  if(parseInt(btn.getAttribute('data-idx'), 10) === woRichtigIdx){
     btn.classList.add('correct');
     woCorrect++;
     fb.textContent = 'Richtig ✦ — ' + q.de;
     fb.className = 'ex-feedback good';
   } else {
     btn.classList.add('wrong');
-    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.tr) buttons[j].classList.add('correct'); }
+    if(buttons[woRichtigIdx]) buttons[woRichtigIdx].classList.add('correct');
     fb.textContent = 'Es heißt „' + q.tr + '" — ' + q.de;
     fb.className = 'ex-feedback bad';
   }
@@ -1898,6 +1914,7 @@ var hoIndex = 0;
 var hoCorrect = 0;
 
 function startHoerDrill(){
+  exerciseReturnView = 'letters';
   hoQuestions = [];
   for(var i=0;i<10;i++){ hoQuestions.push(buildHoerQuestion()); }
   hoIndex = 0; hoCorrect = 0;
@@ -1909,41 +1926,41 @@ function renderHoQuestion(){
   var body = document.getElementById('exercise-body');
   if(hoIndex >= hoQuestions.length){ renderHoDone(); return; }
   var q = hoQuestions[hoIndex];
+  hoRichtigIdx = q.optionen.indexOf(q.richtig);
   var pct = Math.round((hoIndex / hoQuestions.length) * 100);
 
   body.innerHTML =
     '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
     '<div class="ex-question">Welchen Buchstaben hörst du?</div>' +
-    '<button class="ex-play" onclick="speak(\'' + q.audio + '\')" aria-label="Abspielen">▷</button>' +
+    '<button class="ex-play" data-say="' + esc(q.audio) + '" aria-label="Abspielen">▷</button>' +
     '<div class="ex-options" style="grid-template-columns:repeat(' + q.optionen.length + ',1fr);">' +
-      q.optionen.map(function(o){
-        return '<button class="ex-option ar-opt" onclick="hoAnswer(this)">' + esc(o) + '</button>';
+      q.optionen.map(function(o, idx){
+        return '<button class="ex-option ar-opt" data-idx="' + idx + '" onclick="hoAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
     '<div class="ex-feedback" id="ex-feedback"></div>' +
     '<p style="font-size:.85rem; color:rgba(242,232,208,0.5); font-style:italic; margin-top:1rem;">Tippe ▷, so oft du willst — dann wähle.</p>';
 
-  // direkt einmal abspielen (nach vorherigem Tap erlaubt iOS das)
-  speak(q.audio);
+  // nur auto-abspielen, wenn der Nutzer die Audio-Ausgabe bereits per Geste freigegeben hat (iOS-sicher)
+  if(audioUnlocked){ speak(q.audio); }
 }
 
 function hoAnswer(btn){
   var q = hoQuestions[hoIndex];
-  var chosen = btn.textContent;
   var buttons = document.querySelectorAll('.ex-option');
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
   var l = findLetter(q.richtig);
   var name = l ? l.name : q.richtig;
 
-  if(chosen === q.richtig){
+  if(parseInt(btn.getAttribute('data-idx'), 10) === hoRichtigIdx){
     btn.classList.add('correct');
     hoCorrect++;
     fb.textContent = 'Richtig ✦ — das war ' + name;
     fb.className = 'ex-feedback good';
   } else {
     btn.classList.add('wrong');
-    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.richtig) buttons[j].classList.add('correct'); }
+    if(buttons[hoRichtigIdx]) buttons[hoRichtigIdx].classList.add('correct');
     fb.textContent = 'Das war ' + name;
     fb.className = 'ex-feedback bad';
   }
@@ -2031,7 +2048,7 @@ function renderThemaWoerter(){
           '<div class="haraka-desc" style="opacity:.7;">' + esc(v.wordType) + '</div>' +
         '</div>' +
       '</button>' +
-      '<button class="haraka-listen" onclick="speak(\'' + v.arabic + '\')" aria-label="Anhören">▷</button>' +
+      '<button class="haraka-listen" data-say="' + esc(v.arabic) + '" aria-label="Anhören">▷</button>' +
     '</div>';
   }).join('');
 }
@@ -2069,13 +2086,13 @@ function openVokabel(id){
     '<div class="detail-glyph" style="font-size:clamp(3rem, 14vw, 5rem);">' + esc(v.arabic) + '</div>' +
     '<div class="detail-name">' + esc(v.translations.de) + '</div>' +
     '<div class="detail-translit">' + esc(v.wordType) + '</div>' +
-    '<button class="btn-gold listen-btn" onclick="speak(\'' + v.arabic + '\')">▷ Anhören</button>' +
+    '<button class="btn-gold listen-btn" data-say="' + esc(v.arabic) + '">▷ Anhören</button>' +
     (teile ? '<div class="forms-title">— Formen —</div><div class="forms-grid" style="grid-template-columns:1fr 1fr;">' + teile + '</div>' : '') +
     '<div class="forms-title">— Beispielsatz —</div>' +
     '<div style="text-align:center; background:rgba(15,61,61,0.5); border:1px solid rgba(201,162,39,0.2); border-radius:8px; padding:1rem;">' +
       '<div style="font-family:\'Noto Naskh Arabic\',serif; font-weight:700; font-size:1.4rem; color:#fdf8ec; margin-bottom:.4rem;">' + esc(v.exampleArabic) + '</div>' +
       '<div style="color:rgba(242,232,208,0.8); font-style:italic;">' + esc(v.exampleTranslation.de) + '</div>' +
-      '<button class="haraka-listen" style="margin-top:.6rem;" onclick="speak(\'' + v.exampleArabic.replace(/'/g,'') + '\')">▷</button>' +
+      '<button class="haraka-listen" style="margin-top:.6rem;" data-say="' + esc(v.exampleArabic) + '">▷</button>' +
     '</div>' +
     verwandteBlock;
 
@@ -2090,15 +2107,19 @@ document.getElementById('vokabel-detail').addEventListener('click', function(e){
 });
 
 /* --- Vokabel-Fragen (für Themen-Übung UND Tages-Session) --- */
+function distinctBy(arr, keyFn){ var seen = {}, out = []; arr.forEach(function(x){ var k = keyFn(x); if(!seen[k]){ seen[k] = 1; out.push(x); } }); return out; }
+
 function vokFrageArDe(v){
-  var andere = shuffle(ALLE_VOKABELN.filter(function(x){ return x.id !== v.id; })).slice(0,3);
+  var pool = distinctBy(ALLE_VOKABELN.filter(function(x){ return x.id !== v.id && x.translations.de !== v.translations.de; }), function(x){ return x.translations.de; });
+  var andere = shuffle(pool).slice(0,3);
   return { typ:'wort', frage:'Was bedeutet dieses Wort?', glyph:v.arabic,
     richtig:v.translations.de,
     optionen: shuffle([v.translations.de].concat(andere.map(function(a){ return a.translations.de; }))),
     audio:v.arabic, srsKey:'v:'+v.id };
 }
 function vokFrageDeAr(v){
-  var andere = shuffle(ALLE_VOKABELN.filter(function(x){ return x.id !== v.id; })).slice(0,3);
+  var pool = distinctBy(ALLE_VOKABELN.filter(function(x){ return x.id !== v.id && x.arabic !== v.arabic; }), function(x){ return x.arabic; });
+  var andere = shuffle(pool).slice(0,3);
   return { typ:'dear', frage:'Wie heißt das auf Arabisch?', glyph:'„' + v.translations.de + '"',
     richtig:v.arabic,
     optionen: shuffle([v.arabic].concat(andere.map(function(a){ return a.arabic; }))),
@@ -2109,6 +2130,7 @@ function vokFrage(v){
 }
 
 function startVokabelExercise(){
+  exerciseReturnView = 'thema';
   if(!aktuellesThema) return;
   var deck = shuffle(aktuellesThema.vocab).slice(0, 10);
   exam.fragen = deck.map(vokFrage);
@@ -2307,6 +2329,7 @@ function toggleDialogHilfe(){
 }
 
 function startDialogQuiz(){
+  exerciseReturnView = 'dialog';
   if(!aktuellerDialog) return;
   exam.fragen = shuffle(aktuellerDialog.fragen).map(function(f){
     return { typ:f.typ, frage:f.frage, glyph:f.glyph, richtig:f.richtig,
@@ -2363,6 +2386,7 @@ function buildExam1(){
 var exam = { fragen:[], index:0, richtig:0, aktiv:false, mode:'pruefung' };
 
 function startStufenpruefung(){
+  exerciseReturnView = 'letters';
   exam.fragen = buildExam1();
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'pruefung';
   go('exercise');
@@ -2386,35 +2410,35 @@ function renderExamQuestion(){
 
   var mitte;
   if(q.typ === 'hoeren'){
-    mitte = '<button class="ex-play" onclick="speak(\'' + q.audio + '\')" aria-label="Abspielen">▷</button>';
+    mitte = '<button class="ex-play" data-say="' + esc(q.audio) + '" aria-label="Abspielen">▷</button>';
   } else if(q.typ === 'dear'){
     mitte = '<div class="ex-glyph" style="font-family:\'Cormorant Garamond\',serif; font-size:clamp(1.6rem,6vw,2.4rem); font-style:italic;">' + esc(q.glyph) + '</div>';
   } else {
     mitte = '<div class="ex-glyph" ' + glyphSize + '>' + esc(q.glyph) + '</div>';
   }
 
+  exam.richtigIdx = q.optionen.indexOf(q.richtig);
   body.innerHTML =
     '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
     kopf +
     '<div class="ex-question" style="margin-top:-.8rem;">' + esc(q.frage) + '</div>' +
     mitte +
     '<div class="ex-options" ' + cols + '>' +
-      q.optionen.map(function(o){
-        return '<button class="' + optKlasse + '" onclick="examAnswer(this)">' + esc(o) + '</button>';
+      q.optionen.map(function(o, idx){
+        return '<button class="' + optKlasse + '" data-idx="' + idx + '" onclick="examAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
     '<div class="ex-feedback" id="ex-feedback"></div>';
 
-  if(q.typ === 'hoeren'){ speak(q.audio); }
+  if(q.typ === 'hoeren' && audioUnlocked){ speak(q.audio); }
 }
 
 function examAnswer(btn){
   var q = exam.fragen[exam.index];
-  var chosen = btn.textContent;
   var buttons = document.querySelectorAll('.ex-option');
   for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
   var fb = document.getElementById('ex-feedback');
-  var isRight = (chosen === q.richtig);
+  var isRight = (parseInt(btn.getAttribute('data-idx'), 10) === exam.richtigIdx);
 
   if(isRight){
     btn.classList.add('correct');
@@ -2423,7 +2447,7 @@ function examAnswer(btn){
     fb.className = 'ex-feedback good';
   } else {
     btn.classList.add('wrong');
-    for(var j=0;j<buttons.length;j++){ if(buttons[j].textContent === q.richtig) buttons[j].classList.add('correct'); }
+    if(buttons[exam.richtigIdx]) buttons[exam.richtigIdx].classList.add('correct');
     fb.textContent = 'Richtig wäre: ' + q.richtig;
     fb.className = 'ex-feedback bad';
   }

@@ -6,6 +6,20 @@
 
 ---
 
+## Fortschritt (pro AP pflegen)
+
+| AP | Status | Commit / Notiz |
+|---|---|---|
+| **0.1 — Bugfixes** | ☑ erledigt | B1b, B2, B3, B4, B5, B6, B8 gefixt & im Browser verifiziert. **B9 bewusst nach AP 3.1 verschoben** (braucht Supabase-Zugang / eigene `exam_data`-Spalte; ohne DB-Zugang kein sinnvoller Fix — Plan sah das bereits als „langfristig AP 3.1" vor). B1a (Daten-Duplikate physisch entfernen) + B7 (SM-2-Altlasten streichen) laufen planmäßig in **AP 0.2**; der Code-seitige Dedupe-Schutz (B1b) verhindert die Doppel-Optionen bereits jetzt. |
+| 0.2 — Datenbereinigung | ☐ offen | — |
+| 0.3 — Modularisierung | ☐ offen | — |
+| 0.4 — Test/Deploy-Fundament | ☐ offen | — |
+| 0.5 — RTL/A11y | ☐ offen | — |
+
+*Ab Phase 1 pro AP eine Zeile ergänzen. Format: ☐ offen / ⧗ in Arbeit / ☑ erledigt + Commit-Hash.*
+
+---
+
 ## Teil 1 — Ist-Analyse (Engineering-Review)
 
 ### 1.1 Architektur-Überblick
