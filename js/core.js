@@ -66,6 +66,50 @@ document.addEventListener('click', function(e){
   if(t){ speak(t.getAttribute('data-say')); }
 });
 
+/* ============================================================
+   A11Y — Tastaturbedienung & arabische Sprachauszeichnung
+   ============================================================ */
+// Antwort-Optionen der aktiven Übung per Zahltasten 1–9 wählen (Bedienung ohne Maus)
+document.addEventListener('keydown', function(e){
+  if(e.altKey || e.ctrlKey || e.metaKey) return;
+  var tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : '';
+  if(tag === 'input' || tag === 'textarea') return;
+  if(e.key >= '1' && e.key <= '9'){
+    var ex = document.getElementById('view-exercise');
+    if(!ex || !ex.classList.contains('active')) return;
+    var opts = ex.querySelectorAll('.ex-option:not([disabled])');
+    var idx = parseInt(e.key, 10) - 1;
+    if(opts[idx]){ e.preventDefault(); opts[idx].click(); }
+  }
+});
+
+// Arabische Textknoten für Screenreader auszeichnen (korrekte Aussprache + RTL).
+// Regex-Guard sorgt dafür, dass nur echt-arabische Inhalte markiert werden
+// (z. B. bleibt eine lateinische ex-glyph bei „Wie heißt das auf Arabisch?" unmarkiert).
+var AR_RE = /[؀-ۿ]/;
+var AR_SEL = '.glyph,.fglyph,.detail-glyph,.detail-name,.haraka-glyph,.haraka-ex,' +
+  '.dlg-ar,.ar-opt,.ex-glyph,.app-name-ar,.stop-title-ar,.daily-ar,.topbar h2,' +
+  '.page-head h1,.footer .ar';
+function markArabic(root){
+  root = root || document.body;
+  if(root.nodeType !== 1) return;
+  var els = [];
+  // den Wurzelknoten selbst einschließen (bei innerHTML-Sets ist das Zielelement
+  // oft direkt ein hinzugefügter Knoten, den querySelectorAll nicht erfasst)
+  if(root.matches && root.matches(AR_SEL)) els.push(root);
+  if(root.querySelectorAll){
+    var found = root.querySelectorAll(AR_SEL);
+    for(var k=0;k<found.length;k++) els.push(found[k]);
+  }
+  for(var i=0;i<els.length;i++){
+    var el = els[i];
+    if(AR_RE.test(el.textContent || '')){
+      el.setAttribute('lang', 'ar');
+      el.setAttribute('dir', 'rtl');
+    }
+  }
+}
+
 
 function shuffle(a){
   a = a.slice();

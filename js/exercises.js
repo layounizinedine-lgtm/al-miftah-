@@ -196,7 +196,7 @@ function renderQuestion(){
         return '<button class="ex-option" data-idx="' + idx + '" onclick="answer(this)">' + esc(o.name) + '</button>';
       }).join('') +
     '</div>' +
-    '<div class="ex-feedback" id="ex-feedback"></div>';
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
 }
 
 function answer(btn){
@@ -338,7 +338,7 @@ function renderHaQuestion(){
         return '<button class="ex-option" data-idx="' + idx + '" onclick="haAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
-    '<div class="ex-feedback" id="ex-feedback"></div>';
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
 }
 
 function haAnswer(btn){
@@ -432,7 +432,7 @@ function renderWoQuestion(){
         return '<button class="ex-option" data-idx="' + idx + '" onclick="woAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
-    '<div class="ex-feedback" id="ex-feedback"></div>';
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
 }
 
 function woAnswer(btn){
@@ -523,7 +523,7 @@ function renderHoQuestion(){
         return '<button class="ex-option ar-opt" data-idx="' + idx + '" onclick="hoAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
-    '<div class="ex-feedback" id="ex-feedback"></div>' +
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>' +
     '<p style="font-size:.85rem; color:rgba(242,232,208,0.5); font-style:italic; margin-top:1rem;">Tippe ▷, so oft du willst — dann wähle.</p>';
 
   // nur auto-abspielen, wenn der Nutzer die Audio-Ausgabe bereits per Geste freigegeben hat (iOS-sicher)
@@ -917,7 +917,7 @@ function renderExamQuestion(){
         return '<button class="' + optKlasse + '" data-idx="' + idx + '" onclick="examAnswer(this)">' + esc(o) + '</button>';
       }).join('') +
     '</div>' +
-    '<div class="ex-feedback" id="ex-feedback"></div>';
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
 
   if(q.typ === 'hoeren' && audioUnlocked){ speak(q.audio); }
 }

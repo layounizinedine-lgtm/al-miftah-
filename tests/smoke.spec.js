@@ -125,6 +125,37 @@ test('Stufe-2-Übungen starten mit gültigen Optionen', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
+test('Barrierefreiheit: Tastatur, arabische Auszeichnung, aria-live', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  // Arabischer Titel ist für Screenreader ausgezeichnet
+  const titleAr = await page.evaluate(() => {
+    const t = document.querySelector('.app-name-ar');
+    return t && t.getAttribute('lang') === 'ar' && t.getAttribute('dir') === 'rtl';
+  });
+  expect(titleAr).toBeTruthy();
+
+  // Übung per Tastatur (Zahltaste) bedienbar
+  await page.evaluate(() => { go('letters'); startExercise(); });
+  await page.waitForTimeout(300);
+  const kbd = await page.evaluate(async () => {
+    const glyphLang = document.querySelector('.ex-glyph').getAttribute('lang');
+    const feedbackLive = document.getElementById('ex-feedback').getAttribute('aria-live');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }));
+    await new Promise(r => setTimeout(r, 100));
+    const answered = document.querySelectorAll('.ex-option[disabled]').length > 0
+      && document.querySelectorAll('.ex-option.correct, .ex-option.wrong').length > 0;
+    return { glyphLang, feedbackLive, answered };
+  });
+  expect(kbd.glyphLang).toBe('ar');
+  expect(kbd.feedbackLive).toBe('polite');
+  expect(kbd.answered).toBeTruthy();
+  expect(errors).toEqual([]);
+});
+
 test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ page }) => {
   const errors = [];
   await harden(page, errors);
