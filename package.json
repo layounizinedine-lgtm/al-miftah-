@@ -1,0 +1,14 @@
+{
+  "name": "al-miftah",
+  "version": "0.3.0",
+  "private": true,
+  "description": "المفتاح Al-Miftāḥ — App zum Erlernen der arabischen Sprache",
+  "scripts": {
+    "check": "node scripts/check-syntax.js",
+    "test": "playwright test",
+    "verify": "npm run check && npm test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0"
+  }
+}
