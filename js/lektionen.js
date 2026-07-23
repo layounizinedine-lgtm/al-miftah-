@@ -2,8 +2,11 @@
    Baut auf data-curriculum.js (STUFE1_LEKTIONEN) und der bestehenden
    Exam-Engine aus exercises.js (exam, renderExamQuestion, renderExamDone) auf.
    AP 1.1: Struktur + Gating + funktionierender Check.
-   AP 1.2 (folgt): größere Fragenpools, Cooldown nach Fehlversuch, SRS-Box-
-   Demotion gescheiterter Items — bewusst hier noch nicht enthalten. */
+   AP 1.2: Fragenpool ≥40 pro Lektion (Erkennen/Hören/Formen bzw. Haraka/Lesen),
+   10-Minuten-Cooldown nach Fehlversuch (übersteht Reload), gescheiterte Items
+   werden per srsKey automatisch in SRS-Box 1 zurückgestuft (über die bestehende
+   examAnswer()-Bewertung in exercises.js), Selbstauskunft entfernt — das
+   ✦-Sternchen einer Lektion 1-7 kommt ausschließlich vom bestandenen Check. */
 
 /* ============================================================
    FORTSCHRITT — welche Lektion ist bestanden?
@@ -26,6 +29,15 @@ function lektionData(id){
 function lektionBestanden(id){
   var data = loadLektionenState();
   return !!(data[id] && data[id].passed);
+}
+
+// Cooldown nach Fehlversuch: 10 Minuten, bevor der Check erneut gestartet werden darf.
+var LEKTION_COOLDOWN_MS = 10 * 60 * 1000;
+function lektionCooldownRestMs(id){
+  var data = loadLektionenState();
+  var rec = data[id];
+  if(!rec || !rec.cooldownUntil) return 0;
+  return Math.max(0, rec.cooldownUntil - Date.now());
 }
 
 // 'bestanden' | 'offen' | 'gesperrt' | 'bald' (Inhalt noch nicht verfügbar, AP 1.3)
@@ -91,6 +103,7 @@ function renderLektionsPfad(containerId){
    LEKTIONS-DETAIL
    ============================================================ */
 var aktuelleLektion = null;
+var lektionCooldownTimer = null;
 
 function openLektion(id){
   var status = lektionStatus(id);
@@ -99,6 +112,13 @@ function openLektion(id){
   if(!aktuelleLektion) return;
   renderLektionDetail();
   go('lektion');
+
+  if(lektionCooldownTimer) clearInterval(lektionCooldownTimer);
+  lektionCooldownTimer = setInterval(function(){
+    if(!aktuelleLektion || aktuelleLektion.id !== id){ clearInterval(lektionCooldownTimer); return; }
+    if(lektionCooldownRestMs(id) <= 0){ clearInterval(lektionCooldownTimer); }
+    renderLektionDetail();
+  }, 30000);
 }
 
 function renderLektionDetail(){
@@ -136,10 +156,37 @@ function renderLektionDetail(){
     html += '<p style="text-align:center; color:rgba(242,232,208,0.7); font-style:italic; padding:1rem;">Diese Lektion wird in einem kommenden Ausbauschritt ergänzt.</p>';
   }
 
+  var restMs = lektionCooldownRestMs(l.id);
+  var data = loadLektionenState();
+  var schwach = (data[l.id] && data[l.id].schwachePunkte) || [];
+  if(restMs > 0 && schwach.length){
+    html += '<div style="margin:0 auto 1rem; max-width:34rem; padding:1rem; background:rgba(122,46,46,0.15); border:1px solid rgba(227,128,111,0.3); border-radius:8px; text-align:center;">' +
+      '<p style="font-family:\'Cormorant Garamond\',serif; font-style:italic; color:rgba(242,232,208,0.8); margin:0 0 .6rem;">Diese Punkte haben dich zuletzt gestolpert:</p>' +
+      '<div style="display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center;">' +
+        schwach.map(function(s){
+          return /[؀-ۿ]/.test(s)
+            ? '<button class="letter-card" style="width:54px;height:54px;" onclick="openLetter(\'' + s + '\')" lang="ar" dir="rtl"><span class="glyph" style="font-size:1.3rem;">' + s + '</span></button>'
+            : '<span class="badge badge-soon">' + esc(s) + '</span>';
+        }).join('') +
+      '</div>' +
+    '</div>';
+  }
+
   document.getElementById('lektion-inhalt').innerHTML = html;
 
   var btn = document.getElementById('lektion-check-btn');
-  if(btn) btn.style.display = l.contentPending ? 'none' : '';
+  if(!btn) return;
+  if(l.contentPending){
+    btn.style.display = 'none';
+  } else if(restMs > 0){
+    btn.style.display = '';
+    btn.disabled = true;
+    btn.textContent = '⏳ Nächster Versuch in ' + Math.ceil(restMs / 60000) + ' Min.';
+  } else {
+    btn.style.display = '';
+    btn.disabled = false;
+    btn.textContent = '✦ Lektion-Check starten';
+  }
 }
 
 /* ============================================================
@@ -155,39 +202,82 @@ function alleBisherigenBuchstaben(bisId){
   return out;
 }
 
+// srsKey = der Buchstabe selbst: nutzt die bestehende SRS-Bewertung in
+// examAnswer() (exercises.js) automatisch mit — eine falsche Antwort stuft
+// den Buchstaben ohne weiteres Zutun auf SRS-Box 1 zurück.
 function letterFrageErkennen(l){
   var andere = shuffle(ALL_LETTERS.filter(function(x){ return x.ch !== l.ch; })).slice(0,3);
   return { typ:'buchstabe', frage:'Welcher Buchstabe ist das?', glyph:l.ch, richtig:l.name,
-    optionen: shuffle([l.name].concat(andere.map(function(a){ return a.name; }))), audio:l.ch };
+    optionen: shuffle([l.name].concat(andere.map(function(a){ return a.name; }))), audio:l.ch, srsKey:l.ch };
 }
 function letterFrageHoeren(l){
   var andere = shuffle(ALL_LETTERS.filter(function(x){ return x.ch !== l.ch; })).slice(0,3);
   return { typ:'hoeren', frage:'Welchen Buchstaben hörst du?', glyph:null, richtig:l.ch,
-    optionen: shuffle([l.ch].concat(andere.map(function(a){ return a.ch; }))), audio:l.ch };
+    optionen: shuffle([l.ch].concat(andere.map(function(a){ return a.ch; }))), audio:l.ch, srsKey:l.ch };
+}
+// Formen-Frage: zeigt den Buchstaben in einer zufälligen Kontextform
+// (isoliert/Anfang/Mitte/Ende bzw. nur isoliert/Ende bei nicht verbindenden
+// Buchstaben) und fragt nach dem Namen — trainiert das Erkennen der Form,
+// nicht nur der isolierten Grundform.
+function letterFrageFormErkennen(l){
+  var f = forms(l.ch);
+  var moeglich = NON_CONNECTING.has(l.ch) ? [f.isolated, f.fin] : [f.isolated, f.init, f.med, f.fin];
+  var glyph = moeglich[Math.floor(Math.random() * moeglich.length)];
+  var andere = shuffle(ALL_LETTERS.filter(function(x){ return x.ch !== l.ch; })).slice(0,3);
+  return { typ:'buchstabe', frage:'Welcher Buchstabe ist das — in dieser Form?', glyph:glyph, richtig:l.name,
+    optionen: shuffle([l.name].concat(andere.map(function(a){ return a.name; }))), audio:l.ch, srsKey:l.ch };
+}
+
+// Kandidaten-Pool für eine Buchstaben-Lektion (≥ 40 auch bei der kleinsten
+// Lektion, L2 mit 3 Buchstaben: 3 × 7 Varianten × 3 Fragearten = 63).
+function buildLektionPoolBuchstaben(lek){
+  var VARIANTS = 7;
+  var pool = [];
+  lek.letters.forEach(function(ch){
+    var l = findLetter(ch);
+    if(!l) return;
+    for(var i=0;i<VARIANTS;i++){
+      pool.push(letterFrageErkennen(l));
+      pool.push(letterFrageHoeren(l));
+      pool.push(letterFrageFormErkennen(l));
+    }
+  });
+  return pool;
+}
+function buildLektionReviewPoolBuchstaben(lek){
+  var pool = [];
+  alleBisherigenBuchstaben(lek.id).forEach(function(l){
+    pool.push(letterFrageErkennen(l));
+    pool.push(letterFrageHoeren(l));
+    pool.push(letterFrageFormErkennen(l));
+  });
+  return pool;
 }
 
 function buildLektionFragenBuchstaben(lek){
   var n = 10;
-  var eigene = lek.letters.map(findLetter).filter(Boolean);
-  var review = shuffle(alleBisherigenBuchstaben(lek.id));
-  var reviewCount = Math.min(review.length, Math.round(n * 0.3));
+  var reviewVerfuegbar = alleBisherigenBuchstaben(lek.id).length > 0;
+  var reviewCount = reviewVerfuegbar ? 3 : 0; // ~30% Altstoff, sobald welcher besteht
   var neuCount = n - reviewCount;
 
-  var fragen = [];
-  var neuBasis = [];
-  eigene.forEach(function(l){ neuBasis.push({ l:l, art:'erkennen' }); neuBasis.push({ l:l, art:'hoeren' }); });
-  shuffle(neuBasis).slice(0, neuCount).forEach(function(item){
-    fragen.push(item.art === 'erkennen' ? letterFrageErkennen(item.l) : letterFrageHoeren(item.l));
+  // Pflicht-Abdeckung: jeder Buchstabe der Lektion kommt mindestens einmal vor,
+  // mit zufälliger Frageart (Erkennen/Hören/Formen).
+  var pflicht = lek.letters.map(function(ch){
+    var l = findLetter(ch);
+    var art = Math.floor(Math.random() * 3);
+    if(art === 0) return letterFrageErkennen(l);
+    if(art === 1) return letterFrageHoeren(l);
+    return letterFrageFormErkennen(l);
   });
-  review.slice(0, reviewCount).forEach(function(l){
-    fragen.push(Math.random() < 0.5 ? letterFrageErkennen(l) : letterFrageHoeren(l));
-  });
-  // auffüllen, falls eine kleine Lektion (z. B. 3 Buchstaben) + fehlende Review nicht auf n kommt
-  while(fragen.length < n && eigene.length){
-    var extra = eigene[Math.floor(Math.random() * eigene.length)];
-    fragen.push(Math.random() < 0.5 ? letterFrageErkennen(extra) : letterFrageHoeren(extra));
+  var restCount = Math.max(0, neuCount - pflicht.length);
+  var pool = buildLektionPoolBuchstaben(lek);
+  var rest = shuffle(pool).slice(0, restCount);
+
+  var reviewAuswahl = [];
+  if(reviewCount){
+    reviewAuswahl = shuffle(buildLektionReviewPoolBuchstaben(lek)).slice(0, reviewCount);
   }
-  return shuffle(fragen).slice(0, n);
+  return shuffle(pflicht.concat(rest, reviewAuswahl)).slice(0, n);
 }
 
 // Sub-Typ eines buildHaQuestion()-Ergebnisses am Muster der richtigen Antwort erkennen
@@ -222,15 +312,44 @@ function woerterAusGruppen(titel){
   return out;
 }
 
+function lektionZielTyp(lek){
+  return (lek.typ === 'harakat') ? 'kurz' : (lek.typ === 'madd') ? 'lang' : 'tanwin';
+}
+// Welche früheren Vokal-Typen werden kumulativ mitgeprüft?
+// L9 (lang) wiederholt L8 (kurz); L10 (tanwin) wiederholt L8 + L9.
+function harakatReviewTypen(lek){
+  if(lek.typ === 'madd') return ['kurz'];
+  if(lek.typ === 'tanwin') return ['kurz', 'lang'];
+  return [];
+}
+
+// Kandidaten-Pool ≥ 40: 30 Haraka-Varianten + 3 Distraktor-Varianten je Lesewort.
+function buildLektionPoolHarakat(lek){
+  var zielTyp = lektionZielTyp(lek);
+  var pool = [];
+  for(var i=0;i<30;i++){ pool.push(haFrageZielTyp(zielTyp)); }
+  woerterAusGruppen(lek.woerterTitel).forEach(function(w){
+    for(var j=0;j<3;j++){ pool.push(wortFrage(w)); }
+  });
+  return pool;
+}
+
 function buildLektionFragenHarakat(lek){
   var n = 10;
-  var zielTyp = (lek.typ === 'harakat') ? 'kurz' : (lek.typ === 'madd') ? 'lang' : 'tanwin';
-  var fragen = [];
-  for(var i=0;i<6;i++){ fragen.push(haFrageZielTyp(zielTyp)); }
-  var woerter = shuffle(woerterAusGruppen(lek.woerterTitel));
-  woerter.slice(0, 4).forEach(function(w){ fragen.push(wortFrage(w)); });
-  while(fragen.length < n){ fragen.push(haFrageZielTyp(zielTyp)); }
-  return shuffle(fragen).slice(0, n);
+  var reviewTypen = harakatReviewTypen(lek);
+  var reviewCount = reviewTypen.length ? 3 : 0;
+  var neuCount = n - reviewCount;
+
+  var pool = buildLektionPoolHarakat(lek);
+  var neuAuswahl = shuffle(pool).slice(0, neuCount);
+
+  var reviewAuswahl = [];
+  if(reviewCount){
+    var reviewPool = [];
+    reviewTypen.forEach(function(t){ for(var i=0;i<10;i++){ reviewPool.push(haFrageZielTyp(t)); } });
+    reviewAuswahl = shuffle(reviewPool).slice(0, reviewCount);
+  }
+  return shuffle(neuAuswahl.concat(reviewAuswahl)).slice(0, n);
 }
 
 function buildLektionFragen(lek){
@@ -242,11 +361,26 @@ function lektionBestehensgrenze(n){ return Math.ceil(n * 0.9); } // 9/10
 function startLektionCheck(id){
   var lek = lektionData(id);
   if(!lek || lek.contentPending) return;
+  if(lektionCooldownRestMs(id) > 0) return; // Schutz, falls UI umgangen wird
   exerciseReturnView = 'lektion';
   exam.fragen = buildLektionFragen(lek);
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'lektion'; exam.lektionId = id;
+  exam.lektionFalsch = [];
   go('exercise');
   renderExamQuestion();
+}
+
+// Dedupliziert gescheiterte Fragen auf ihren eigentlichen Lerngegenstand
+// (bei Buchstaben-Fragen der Buchstabe selbst, sonst die richtige Antwort).
+function lektionSchwacheItems(falschListe){
+  var seen = {}, out = [];
+  falschListe.forEach(function(q){
+    var key = (q.typ === 'buchstabe' || q.typ === 'hoeren') ? q.audio : q.richtig;
+    if(seen[key]) return;
+    seen[key] = 1;
+    out.push(key);
+  });
+  return out;
 }
 
 function handleLektionExamDone(){
@@ -255,15 +389,31 @@ function handleLektionExamDone(){
   var n = exam.fragen.length;
   var grenze = lektionBestehensgrenze(n);
   var bestanden = exam.richtig >= grenze;
+  var schwach = lektionSchwacheItems(exam.lektionFalsch || []);
 
   var data = loadLektionenState();
   var rec = data[lek.id] || { passed:false, best:0, versuche:0 };
   rec.versuche = (rec.versuche || 0) + 1;
   rec.best = Math.max(rec.best || 0, exam.richtig);
   rec.letzterVersuch = Date.now();
-  if(bestanden) rec.passed = true;
+  if(bestanden){
+    rec.passed = true;
+    delete rec.cooldownUntil;
+    delete rec.schwachePunkte;
+  } else {
+    rec.cooldownUntil = Date.now() + LEKTION_COOLDOWN_MS;
+    rec.schwachePunkte = schwach;
+  }
   data[lek.id] = rec;
   saveLektionenState(data);
+
+  // Das ✦-Sternchen der Buchstaben-Bibliothek kommt ausschließlich vom Check.
+  if(bestanden && lek.typ === 'buchstaben'){
+    lek.letters.forEach(function(ch){ doneLetters.add(ch); });
+    saveDone(doneLetters);
+    if(typeof renderLetters === 'function') renderLetters();
+  }
+
   syncAfterSession();
   renderLektionsPfad('lektionen-pfad');
 
@@ -277,7 +427,20 @@ function handleLektionExamDone(){
   } else if(bestanden){
     weiter = '<button class="btn-gold" onclick="go(\'letters\')">Zur Lektionsübersicht</button>';
   } else {
-    weiter = '<button class="btn-gold" onclick="startLektionCheck(' + lek.id + ')">Nochmal versuchen</button>';
+    weiter = '<button class="btn-ghost" onclick="openLektion(' + lek.id + ')">Zurück zur Lektion</button>';
+  }
+
+  var schwachHtml = '';
+  if(!bestanden && schwach.length){
+    var minuten = Math.ceil(LEKTION_COOLDOWN_MS / 60000);
+    schwachHtml =
+      '<div style="margin:1.2rem auto; max-width:26rem; padding:1rem; background:rgba(122,46,46,0.15); border:1px solid rgba(227,128,111,0.3); border-radius:8px;">' +
+        '<p style="font-family:\'Cormorant Garamond\',serif; font-style:italic; color:rgba(242,232,208,0.8); margin:0 0 .6rem;">Diese Punkte haben dich gestolpert:</p>' +
+        '<div style="display:flex; gap:.4rem; flex-wrap:wrap; justify-content:center;">' +
+          schwach.map(function(s){ return '<span class="badge badge-soon" lang="ar" dir="auto">' + esc(s) + '</span>'; }).join('') +
+        '</div>' +
+        '<p style="font-size:.85rem; color:rgba(242,232,208,0.6); font-style:italic; margin:.8rem 0 0;">Nächster Versuch möglich in ' + minuten + ' Minuten.</p>' +
+      '</div>';
   }
 
   body.innerHTML =
@@ -286,10 +449,8 @@ function handleLektionExamDone(){
       '<h2>' + exam.richtig + ' von ' + n + ' richtig</h2>' +
       '<p>' + (bestanden
         ? 'Lektion bestanden — „' + esc(lek.titel) + '" sitzt.'
-        : 'Du brauchst ' + grenze + ' richtige Antworten. Schau dir die Lektion noch einmal an.') + '</p>' +
+        : 'Du brauchst ' + grenze + ' richtige Antworten.') + '</p>' +
+      schwachHtml +
       weiter +
-      '<div style="margin-top:1rem;">' +
-        '<button class="btn-ghost" onclick="openLektion(' + lek.id + ')">Zurück zur Lektion</button>' +
-      '</div>' +
     '</div>';
 }

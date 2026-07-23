@@ -122,7 +122,6 @@ function openLetter(ch){
     '<div class="forms-title">— Formen im Wort —</div>' +
     formsBlock +
     '<div style="text-align:center; margin-top:2rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">' +
-      '<button class="btn-ghost" onclick="markLetterDone(\'' + ch + '\')">✓ Gelernt</button>' +
       '<button class="btn-ghost" onclick="fromDetailToWriting(\'' + ch + '\')">✎ Schreiben</button>' +
     '</div>';
 
@@ -132,13 +131,9 @@ function closeLetter(){
   document.getElementById('letter-detail').classList.remove('active');
   if(window.speechSynthesis) window.speechSynthesis.cancel();
 }
-function markLetterDone(ch){
-  doneLetters.add(ch);
-  saveDone(doneLetters);
-  renderLetters();
-  closeLetter();
-  syncAfterSession();
-}
+// Kein Selbstauskunfts-"✓ Gelernt" mehr (AP 1.2): das ✦-Sternchen (doneLetters)
+// wird ausschließlich durch einen bestandenen Lektions-Check vergeben,
+// siehe handleLektionExamDone() in lektionen.js.
 document.getElementById('letter-detail').addEventListener('click', function(e){
   if(e.target === this) closeLetter();
 });
@@ -212,7 +207,8 @@ function answer(btn){
     exCorrect++;
     fb.textContent = 'Richtig ✦';
     fb.className = 'ex-feedback good';
-    doneLetters.add(correct); saveDone(doneLetters);
+    // Kein automatisches "gelernt" mehr für einen einzelnen Klick (AP 1.2):
+    // das ✦-Sternchen kommt ausschließlich vom bestandenen Lektions-Check.
   } else {
     btn.classList.add('wrong');
     if(buttons[exRichtigIdx]) buttons[exRichtigIdx].classList.add('correct');
@@ -941,6 +937,10 @@ function examAnswer(btn){
     fb.className = 'ex-feedback bad';
   }
   if(q.srsKey){ srsGrade(q.srsKey, isRight); }
+  if(exam.mode === 'lektion' && !isRight){
+    if(!exam.lektionFalsch) exam.lektionFalsch = [];
+    exam.lektionFalsch.push(q);
+  }
   if(q.audio){ speak(q.audio); }
   setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1300);
 }

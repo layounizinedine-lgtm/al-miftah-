@@ -216,6 +216,94 @@ test('Harakat-Lektionen (L8-L10) erzeugen gültige Fragen', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test('Lektions-Fragenpools sind für jede spielbare Lektion ≥ 40', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  const pools = await page.evaluate(() => {
+    var out = {};
+    STUFE1_LEKTIONEN.forEach(function (l) {
+      if (l.contentPending) return;
+      out[l.id] = (l.typ === 'buchstaben') ? buildLektionPoolBuchstaben(l).length : buildLektionPoolHarakat(l).length;
+    });
+    return out;
+  });
+  Object.values(pools).forEach(size => expect(size).toBeGreaterThanOrEqual(40));
+  expect(errors).toEqual([]);
+});
+
+test('Selbstauskunft entfernt: freie Übung markiert nicht mehr automatisch als gelernt', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  const noSelfReport = await page.evaluate(async () => {
+    openLetter('ب');
+    await new Promise(r => setTimeout(r, 150));
+    var htmlHasButton = document.getElementById('letter-detail-sheet').innerHTML.indexOf('Gelernt') >= 0;
+    closeLetter();
+
+    go('bibliothek');
+    startExercise();
+    await new Promise(r => setTimeout(r, 300));
+    var target = exQuestions[0].ch;
+    var right = document.querySelector('.ex-option[data-idx="' + exRichtigIdx + '"]');
+    right.click();
+    await new Promise(r => setTimeout(r, 200));
+    return { htmlHasButton, markedAfterOneClick: doneLetters.has(target) };
+  });
+  expect(noSelfReport.htmlHasButton).toBeFalsy();
+  expect(noSelfReport.markedAfterOneClick).toBeFalsy();
+  expect(errors).toEqual([]);
+});
+
+test('Fehlversuch: Cooldown übersteht Reload, gescheiterte Buchstaben in SRS-Box 1', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.body.click());
+
+  await page.evaluate(() => { srsGrade('ب', true); srsGrade('ب', true); }); // auf Box 3 bringen
+  const vorherBox = await page.evaluate(() => srsItem('ب').box);
+  expect(vorherBox).toBeGreaterThanOrEqual(3);
+
+  await page.evaluate(() => { openLektion(1); startLektionCheck(1); });
+  await page.waitForTimeout(350);
+  await page.evaluate(async () => {
+    for (let i = 0; i < 12 && exam.aktiv; i++) {
+      const buttons = [...document.querySelectorAll('.ex-option')];
+      const wrong = buttons.find(b => parseInt(b.getAttribute('data-idx'), 10) !== exam.richtigIdx);
+      if (!wrong) break;
+      wrong.click();
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  });
+  await page.waitForTimeout(300);
+
+  const nachFehlversuch = await page.evaluate(() => ({
+    box: srsItem('ب').box,
+    status: lektionStatus(1),
+    restMs: lektionCooldownRestMs(1),
+    btnDisabled: (function () { openLektion(1); return document.getElementById('lektion-check-btn').disabled; })(),
+    guardBlockt: (function () { exam.aktiv = false; startLektionCheck(1); return exam.aktiv === false; })()
+  }));
+  expect(nachFehlversuch.box).toBe(1);
+  expect(nachFehlversuch.status).toBe('offen'); // nicht bestanden, nicht neu gesperrt
+  expect(nachFehlversuch.restMs).toBeGreaterThan(0);
+  expect(nachFehlversuch.btnDisabled).toBeTruthy();
+  expect(nachFehlversuch.guardBlockt).toBeTruthy();
+
+  await page.reload();
+  await page.waitForTimeout(400);
+  const nachReload = await page.evaluate(() => lektionCooldownRestMs(1));
+  expect(nachReload).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
 test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ page }) => {
   const errors = [];
   await harden(page, errors);
