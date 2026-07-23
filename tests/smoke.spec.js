@@ -156,6 +156,66 @@ test('Barrierefreiheit: Tastatur, arabische Auszeichnung, aria-live', async ({ p
   expect(errors).toEqual([]);
 });
 
+test('Lektionspfad: Gating, Bestehen schaltet frei, Reload erhält Zustand', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  // Neuer Nutzer: nur L1 offen
+  const initial = await page.evaluate(() => STUFE1_LEKTIONEN.map(l => lektionStatus(l.id)));
+  expect(initial[0]).toBe('offen');
+  expect(initial.slice(1, 10).every(s => s === 'gesperrt')).toBeTruthy();
+  expect(initial[10]).toBe('bald'); // L11 — Inhalt folgt in AP 1.3
+  expect(initial[11]).toBe('bald'); // L12
+
+  // L1-Check bestehen (immer die richtige Option klicken) → L2 offen
+  await page.evaluate(() => { document.body.click(); openLektion(1); startLektionCheck(1); });
+  await page.waitForTimeout(350);
+  await page.evaluate(async () => {
+    for (let i = 0; i < 12 && exam.aktiv; i++) {
+      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+      if (!right) break;
+      right.click();
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  });
+  await page.waitForTimeout(300);
+  const afterPass = await page.evaluate(() => ({ l1: lektionStatus(1), l2: lektionStatus(2), l3: lektionStatus(3) }));
+  expect(afterPass).toEqual({ l1: 'bestanden', l2: 'offen', l3: 'gesperrt' });
+
+  // Zustand übersteht Reload
+  await page.reload();
+  await page.waitForTimeout(400);
+  const afterReload = await page.evaluate(() => ({ l1: lektionStatus(1), l2: lektionStatus(2) }));
+  expect(afterReload).toEqual({ l1: 'bestanden', l2: 'offen' });
+  expect(errors).toEqual([]);
+});
+
+test('Harakat-Lektionen (L8-L10) erzeugen gültige Fragen', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  const result = await page.evaluate(() => {
+    var bad = 0, total = 0;
+    [8, 9, 10].forEach(function (id) {
+      var lek = lektionData(id);
+      for (var i = 0; i < 15; i++) {
+        buildLektionFragenHarakat(lek).forEach(function (q) {
+          total++;
+          if (q.optionen.indexOf(q.richtig) < 0) bad++;
+        });
+      }
+    });
+    return { total, bad };
+  });
+  expect(result.bad).toBe(0);
+  expect(result.total).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
 test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ page }) => {
   const errors = [];
   await harden(page, errors);

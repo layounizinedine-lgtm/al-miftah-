@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function(){
   renderPath('intro-path');
   renderPath('start-path');
   renderLetters();
+  renderLektionsPfad('lektionen-pfad');
   renderHarakat();
   renderWoerter();
   renderThemen();

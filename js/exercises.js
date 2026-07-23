@@ -950,6 +950,11 @@ function renderExamDone(){
   var body = document.getElementById('exercise-body');
   var n = exam.fragen.length;
 
+  if(exam.mode === 'lektion'){
+    if(typeof handleLektionExamDone === 'function') handleLektionExamDone();
+    return;
+  }
+
   if(exam.mode === 'pruefung'){
     var bestandenJetzt = exam.richtig >= Math.ceil(n * 0.8);
     if(bestandenJetzt){

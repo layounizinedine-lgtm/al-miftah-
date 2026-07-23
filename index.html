@@ -97,7 +97,7 @@
     </footer>
   </section>
 
-  <!-- ============ VIEW: LETTERS (Stufe 1) ============ -->
+  <!-- ============ VIEW: LETTERS (Stufe 1 — Lektionspfad) ============ -->
   <section id="view-letters" class="view">
     <div class="topbar">
       <button class="btn-ghost" onclick="go('start')">‹ Stufen</button>
@@ -109,9 +109,66 @@
 
     <div class="page-head">
       <div class="kicker">Erste Stufe</div>
-      <h1>Das arabische Alphabet</h1>
-      <p>28 Buchstaben — tippe einen an, um ihn kennenzulernen</p>
-      <p style="margin-top:.6rem;"><button class="auth-link" onclick="startStufenpruefung()">Kann ich schon → direkt zur Stufenprüfung</button></p>
+      <h1>Der Weg durch das Alphabet</h1>
+      <p>12 Lektionen — jede öffnet die nächste erst, wenn du sie wirklich beherrschst</p>
+      <p style="margin-top:.6rem; display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <button class="auth-link" onclick="go('bibliothek')">📖 Bibliothek — alle Buchstaben nachschlagen</button>
+        <button class="auth-link" onclick="startStufenpruefung()">Kann ich schon → direkt zur Stufenprüfung</button>
+      </p>
+    </div>
+
+    <div class="path-section">
+      <div class="path" id="lektionen-pfad"><!-- filled by JS --></div>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ ٱقْرَأْ ✦</span>
+      Lies.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: LEKTION (Lektions-Detail + Check) ============ -->
+  <section id="view-lektion" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('letters')">‹ Lektionen</button>
+      <div style="text-align:right;">
+        <h2 id="lektion-titel-ar">الدَّرْس</h2>
+        <div class="sub">Lektion</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Erste Stufe · Lektion</div>
+      <h1 id="lektion-head">—</h1>
+      <p id="lektion-unter">—</p>
+    </div>
+
+    <div id="lektion-inhalt" style="max-width:60rem; margin:0 auto; padding:0 1.2rem;"><!-- filled by JS --></div>
+
+    <div style="text-align:center; padding: 2rem 1.5rem 4rem;">
+      <button class="btn-gold" id="lektion-check-btn" onclick="startLektionCheck(aktuelleLektion.id)">✦ Lektion-Check starten</button>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ خُطْوَةً خُطْوَةً ✦</span>
+      Schritt für Schritt.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: BIBLIOTHEK (alle Buchstaben, freies Üben) ============ -->
+  <section id="view-bibliothek" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('letters')">‹ Lektionen</button>
+      <div style="text-align:right;">
+        <h2>الحروف</h2>
+        <div class="sub">Bibliothek</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Nachschlagewerk</div>
+      <h1>Alle 28 Buchstaben</h1>
+      <p>Zum Nachschlagen und freien Üben — unabhängig vom Lektionsfortschritt</p>
     </div>
 
     <div class="groups" id="letter-groups"><!-- filled by JS --></div>
@@ -373,8 +430,10 @@
 <script defer src="js/data-harakat.js"></script>
 <script defer src="js/data-woerter.js"></script>
 <script defer src="js/data-dialoge.js"></script>
+<script defer src="js/data-curriculum.js"></script>
 <script defer src="js/srs.js"></script>
 <script defer src="js/exercises.js"></script>
+<script defer src="js/lektionen.js"></script>
 <script defer src="js/writing.js"></script>
 <script defer src="js/auth-sync.js"></script>
 <script defer src="js/main.js"></script>
