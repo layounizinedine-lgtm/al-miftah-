@@ -1,8 +1,9 @@
 /* data-curriculum.js — Lehrplan Stufe 1: 12 Lektionen vom ersten Buchstaben
    bis zum flüssigen Lesen. Reihenfolge ist pädagogisch (Formähnlichkeit,
    steigende Schwierigkeit), nicht identisch mit der Bibliotheks-Gruppierung
-   in data-letters.js. Lektionen 11/12 (Sonderzeichen, Sonnen-/Mondbuchstaben)
-   sind als Kapitel bereits sichtbar, ihr Inhalt folgt in AP 1.3. */
+   in data-letters.js. Lektion 11 (Sonderzeichen) und 12 (Sonnen-/Mond-
+   buchstaben) schließen die für flüssiges Lesen nötigen Sonderfälle ab
+   (data-sonderzeichen.js, data-sonnenmond.js, AP 1.3). */
 
 var STUFE1_LEKTIONEN = [
   { id:1,  titel:'Erste Formen',            titelAr:'الحروف الأولى',            typ:'buchstaben', letters:['ا','ب','ت','ث'] },
@@ -18,6 +19,6 @@ var STUFE1_LEKTIONEN = [
     harakatIds:['madd-a','madd-i','madd-u'], woerterTitel:['Lange Vokale (Madd)'] },
   { id:10, titel:'Schadda & Tanwin',         titelAr:'الشدّة والتنوين',          typ:'tanwin',
     harakatIds:['schadda','fathatan','kasratan','dammatan'], woerterTitel:['Schadda sehen','Tanwin sehen — an · in · un'] },
-  { id:11, titel:'Sonderzeichen',            titelAr:'حروف خاصة',                typ:'sonderzeichen', contentPending:true },
-  { id:12, titel:'Sonnen- & Mondbuchstaben', titelAr:'الحروف الشمسية والقمرية',  typ:'sonne-mond',    contentPending:true }
+  { id:11, titel:'Sonderzeichen',            titelAr:'حروف خاصة',                typ:'sonderzeichen' },
+  { id:12, titel:'Sonnen- & Mondbuchstaben', titelAr:'الحروف الشمسية والقمرية',  typ:'sonne-mond' }
 ];

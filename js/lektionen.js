@@ -56,6 +56,8 @@ function lektionStatus(id){
 function lektionBeschreibung(l){
   if(l.contentPending) return 'Wird in einem kommenden Ausbauschritt ergänzt.';
   if(l.typ === 'buchstaben') return 'Buchstaben: ' + l.letters.join('  ');
+  if(l.typ === 'sonderzeichen') return 'Sonderzeichen: ' + SONDERZEICHEN.map(function(s){ return s.zeichen; }).join('  ');
+  if(l.typ === 'sonne-mond') return 'Die Assimilationsregel des bestimmten Artikels اَلْ';
   var namen = (l.harakatIds || []).map(function(hid){ var h = findHaraka(hid); return h ? h.name : hid; });
   return 'Vokalzeichen: ' + namen.join(', ');
 }
@@ -137,6 +139,37 @@ function renderLektionDetail(){
         '<span class="glyph">' + ch + '</span><span class="lname">' + esc(letter ? letter.name : ch) + '</span></button>';
     }).join('');
     html += '<div class="letter-grid" style="max-width:26rem; margin:0 auto 2rem;">' + cards + '</div>';
+  } else if(l.typ === 'sonderzeichen'){
+    html += '<div class="harakat-list" style="padding:0;">' + SONDERZEICHEN.map(function(s){
+      var beispiele = s.beispiele.map(function(w){ return esc(w.ar) + ' — ' + esc(w.de); }).join(' · ');
+      return '<div class="haraka-card">' +
+        '<div class="haraka-glyph">' + esc(s.zeichen) + '</div>' +
+        '<div class="haraka-body">' +
+          '<div><span class="haraka-name">' + esc(s.name) + '</span> <span class="haraka-ex-tr">— ' + esc(s.tr) + '</span></div>' +
+          '<div class="haraka-desc">' + esc(s.desc) + '</div>' +
+          '<div class="haraka-hilfe">✦ ' + esc(s.hilfe) + '</div>' +
+          '<div class="haraka-desc" style="margin-top:.4rem; font-style:italic;">' + beispiele + '</div>' +
+        '</div>' +
+        '<button class="haraka-listen" data-say="' + esc(s.zeichen) + '" aria-label="Anhören">▷</button>' +
+      '</div>';
+    }).join('') + '</div>';
+  } else if(l.typ === 'sonne-mond'){
+    html += '<div style="max-width:34rem; margin:0 auto 1.5rem; padding:1.2rem; background:rgba(15,61,61,0.5); border:1px solid rgba(201,162,39,0.25); border-radius:10px; text-align:center;">' +
+      '<p style="font-family:\'Cormorant Garamond\',serif; font-style:italic; color:rgba(242,232,208,0.85); margin:0 0 .8rem;">' +
+        'Folgt auf اَلْ ein <strong>Sonnenbuchstabe</strong>, verschmilzt das Lām mit ihm — man hört es doppelt (asch-schams). ' +
+        'Folgt ein <strong>Mondbuchstabe</strong>, bleibt das Lām klar hörbar (al-qamar).</p>' +
+      '<div class="detail-glyph" style="font-size:1.6rem; margin:.4rem 0;" lang="ar" dir="rtl">' + SONNENBUCHSTABEN.join(' ') + '</div>' +
+      '<div style="font-size:.8rem; color:rgba(242,232,208,0.6); margin:0 0 .8rem;">Sonnenbuchstaben (14)</div>' +
+      '<div class="detail-glyph" style="font-size:1.6rem; margin:.4rem 0;" lang="ar" dir="rtl">' + MONDBUCHSTABEN.join(' ') + '</div>' +
+      '<div style="font-size:.8rem; color:rgba(242,232,208,0.6);">Mondbuchstaben (14)</div>' +
+    '</div>';
+    html += '<div class="harakat-list" style="padding:0;">' + SONNENMOND_WOERTER.map(function(w){
+      return '<div class="haraka-card">' +
+        '<div class="haraka-glyph" style="width:auto; min-width:96px; padding:0 .6rem; font-size:1.4rem;">' + esc(w.ar) + '</div>' +
+        '<div class="haraka-body"><div><span class="haraka-name">' + esc(w.tr) + '</span> <span class="haraka-ex-tr">— ' + esc(w.de) + '</span></div></div>' +
+        '<button class="haraka-listen" data-say="' + esc(w.ar) + '" aria-label="Anhören">▷</button>' +
+      '</div>';
+    }).join('') + '</div>';
   } else if(l.harakatIds && l.harakatIds.length){
     html += '<div class="harakat-list" style="padding:0;">' + l.harakatIds.map(function(hid){
       var h = findHaraka(hid);
@@ -164,9 +197,9 @@ function renderLektionDetail(){
       '<p style="font-family:\'Cormorant Garamond\',serif; font-style:italic; color:rgba(242,232,208,0.8); margin:0 0 .6rem;">Diese Punkte haben dich zuletzt gestolpert:</p>' +
       '<div style="display:flex; gap:.5rem; flex-wrap:wrap; justify-content:center;">' +
         schwach.map(function(s){
-          return /[؀-ۿ]/.test(s)
+          return findLetter(s)
             ? '<button class="letter-card" style="width:54px;height:54px;" onclick="openLetter(\'' + s + '\')" lang="ar" dir="rtl"><span class="glyph" style="font-size:1.3rem;">' + s + '</span></button>'
-            : '<span class="badge badge-soon">' + esc(s) + '</span>';
+            : '<span class="badge badge-soon" lang="ar" dir="auto">' + esc(s) + '</span>';
         }).join('') +
       '</div>' +
     '</div>';
@@ -352,8 +385,72 @@ function buildLektionFragenHarakat(lek){
   return shuffle(neuAuswahl.concat(reviewAuswahl)).slice(0, n);
 }
 
+/* ============================================================
+   LEKTIONS-CHECK — Sonderzeichen (L11) & Sonnen-/Mondbuchstaben (L12)
+   ============================================================ */
+function sonderzeichenFrageErkennen(s){
+  var andere = shuffle(SONDERZEICHEN.filter(function(x){ return x.id !== s.id; })).slice(0,3);
+  return { typ:'buchstabe', frage:'Welches Sonderzeichen ist das?', glyph:s.zeichen, richtig:s.name,
+    optionen: shuffle([s.name].concat(andere.map(function(a){ return a.name; }))), audio:s.zeichen };
+}
+function sonderzeichenWortFrage(w){
+  return { typ:'wort', frage:'Wie liest man das?', glyph:w.ar, richtig:w.tr,
+    optionen: shuffle([w.tr].concat(w.falsch)), audio:w.ar, de:w.de };
+}
+// Pool >= 40: 10 Zeichen × 3 Erkennen-Varianten + 20 Wörter × 2 Lese-Varianten = 70.
+function buildLektionPoolSonderzeichen(){
+  var pool = [];
+  SONDERZEICHEN.forEach(function(s){
+    for(var i=0;i<3;i++){ pool.push(sonderzeichenFrageErkennen(s)); }
+  });
+  ALLE_SONDERZEICHEN_WOERTER.forEach(function(w){
+    for(var j=0;j<2;j++){ pool.push(sonderzeichenWortFrage(w)); }
+  });
+  return pool;
+}
+function buildLektionFragenSonderzeichen(){
+  // Pflicht-Abdeckung: jedes der 10 Sonderzeichen kommt genau einmal vor —
+  // füllt die 10 Fragen bereits vollständig und deckt alles ab.
+  var pflicht = SONDERZEICHEN.map(function(s){
+    return Math.random() < 0.5
+      ? sonderzeichenFrageErkennen(s)
+      : sonderzeichenWortFrage(s.beispiele[Math.floor(Math.random() * s.beispiele.length)]);
+  });
+  return shuffle(pflicht);
+}
+
+function sonnenmondWortFrage(w){
+  return { typ:'wort', frage:'Wie liest man das (mit „der/die/das")?', glyph:w.ar, richtig:w.tr,
+    optionen: shuffle([w.tr].concat(w.falsch)), audio:w.ar, de:w.de };
+}
+function sonnenmondArtFrage(ch){
+  var istSonne = SONNENBUCHSTABEN.indexOf(ch) >= 0;
+  var richtig = istSonne ? 'Sonnenbuchstabe' : 'Mondbuchstabe';
+  return { typ:'buchstabe', frage:'Sonnen- oder Mondbuchstabe?', glyph:ch, richtig:richtig,
+    optionen: ['Sonnenbuchstabe','Mondbuchstabe'], audio:ch };
+}
+// Zwei getrennte Pools (>= 40 je Pool): Lesefragen und Sonnen/Mond-Einordnung.
+function buildLektionPoolSonnenMondWort(){
+  var pool = [];
+  SONNENMOND_WOERTER.forEach(function(w){ for(var i=0;i<3;i++){ pool.push(sonnenmondWortFrage(w)); } });
+  return pool;
+}
+function buildLektionPoolSonnenMondArt(){
+  var pool = [];
+  SONNENBUCHSTABEN.concat(MONDBUCHSTABEN).forEach(function(ch){ for(var j=0;j<3;j++){ pool.push(sonnenmondArtFrage(ch)); } });
+  return pool;
+}
+function buildLektionFragenSonnenMond(){
+  var wortFragen = shuffle(buildLektionPoolSonnenMondWort()).slice(0,6);
+  var artFragen = shuffle(buildLektionPoolSonnenMondArt()).slice(0,4);
+  return shuffle(wortFragen.concat(artFragen));
+}
+
 function buildLektionFragen(lek){
-  return (lek.typ === 'buchstaben') ? buildLektionFragenBuchstaben(lek) : buildLektionFragenHarakat(lek);
+  if(lek.typ === 'buchstaben') return buildLektionFragenBuchstaben(lek);
+  if(lek.typ === 'sonderzeichen') return buildLektionFragenSonderzeichen();
+  if(lek.typ === 'sonne-mond') return buildLektionFragenSonnenMond();
+  return buildLektionFragenHarakat(lek);
 }
 
 function lektionBestehensgrenze(n){ return Math.ceil(n * 0.9); } // 9/10

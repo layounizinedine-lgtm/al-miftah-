@@ -166,8 +166,8 @@ test('Lektionspfad: Gating, Bestehen schaltet frei, Reload erhält Zustand', asy
   const initial = await page.evaluate(() => STUFE1_LEKTIONEN.map(l => lektionStatus(l.id)));
   expect(initial[0]).toBe('offen');
   expect(initial.slice(1, 10).every(s => s === 'gesperrt')).toBeTruthy();
-  expect(initial[10]).toBe('bald'); // L11 — Inhalt folgt in AP 1.3
-  expect(initial[11]).toBe('bald'); // L12
+  expect(initial[10]).toBe('gesperrt'); // L11 — Sonderzeichen (Inhalt seit AP 1.3 vorhanden)
+  expect(initial[11]).toBe('gesperrt'); // L12 — Sonnen-/Mondbuchstaben
 
   // L1-Check bestehen (immer die richtige Option klicken) → L2 offen
   await page.evaluate(() => { document.body.click(); openLektion(1); startLektionCheck(1); });
@@ -216,6 +216,106 @@ test('Harakat-Lektionen (L8-L10) erzeugen gültige Fragen', async ({ page }) => 
   expect(errors).toEqual([]);
 });
 
+test('L11 (Sonderzeichen) und L12 (Sonnen-/Mondbuchstaben): Inhalt, Checks, Distraktoren', async ({ page }) => {
+  test.setTimeout(45000); // zwei komplette 10-Fragen-Durchläufe (L11 + L12) nacheinander
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  // Datenintegrität: 10 Sonderzeichen, 28 Sonnen-/Mondwörter, Alphabet vollständig partitioniert
+  const daten = await page.evaluate(() => ({
+    sz: SONDERZEICHEN.length,
+    szWoerter: ALLE_SONDERZEICHEN_WOERTER.length,
+    sm: SONNENMOND_WOERTER.length,
+    sonne: SONNENBUCHSTABEN.length,
+    mond: MONDBUCHSTABEN.length,
+    keineUeberlappung: SONNENBUCHSTABEN.filter(function (c) { return MONDBUCHSTABEN.indexOf(c) >= 0; }).length
+  }));
+  expect(daten).toEqual({ sz: 10, szWoerter: 20, sm: 28, sonne: 14, mond: 14, keineUeberlappung: 0 });
+
+  // 1000 generierte Fragen: keine doppelten Optionen, richtige Antwort immer dabei
+  const qualitaet = await page.evaluate(() => {
+    var bad = 0, total = 0;
+    for (var i = 0; i < 50; i++) {
+      buildLektionFragenSonderzeichen().concat(buildLektionFragenSonnenMond()).forEach(function (q) {
+        total++;
+        if (q.optionen.indexOf(q.richtig) < 0) bad++;
+        if (new Set(q.optionen).size !== q.optionen.length) bad++;
+      });
+    }
+    return { total, bad };
+  });
+  expect(qualitaet.bad).toBe(0);
+  expect(qualitaet.total).toBeGreaterThan(0);
+
+  // Distraktoren testen exakt die al-/assimilierte Verwechslung
+  const regel = await page.evaluate(() => {
+    var sonne = SONNENMOND_WOERTER.filter(function (w) { return w.art === 'sonne'; })[0];
+    var mond = SONNENMOND_WOERTER.filter(function (w) { return w.art === 'mond'; })[0];
+    return {
+      // Sonne: richtig ist assimiliert (z. B. "asch-schamsu"); ein Distraktor testet den
+      // typischen Fehler, das Lām unassimiliert als "al-" zu lesen.
+      sonneFalschEnthaeltAl: sonne.falsch.some(function (f) { return f.indexOf('al-') === 0; }),
+      // Mond: richtig ist "al-..."; ein Distraktor testet den umgekehrten Fehler,
+      // das Lām fälschlich zu assimilieren (bricht das "al-"-Präfix).
+      mondFalschEnthaeltAssimiliert: mond.falsch.some(function (f) { return f.indexOf('al-') !== 0; })
+    };
+  });
+  expect(regel.sonneFalschEnthaeltAl).toBeTruthy();
+  expect(regel.mondFalschEnthaeltAssimiliert).toBeTruthy();
+
+  // Kompletter Durchlauf: L1-10 bestanden -> L11 offen -> Check bestehen -> L12 offen -> Check bestehen
+  await page.evaluate(() => {
+    var st = {};
+    for (var i = 1; i <= 10; i++) { st[i] = { passed: true, best: 10, versuche: 1 }; }
+    localStorage.setItem('almiftah_lektionen', JSON.stringify(st));
+  });
+  await page.reload();
+  await page.waitForTimeout(400);
+  await page.evaluate(() => document.body.click());
+
+  const vor = await page.evaluate(() => ({ l11: lektionStatus(11), l12: lektionStatus(12) }));
+  expect(vor).toEqual({ l11: 'offen', l12: 'gesperrt' });
+
+  await page.evaluate(() => { openLektion(11); startLektionCheck(11); });
+  await page.waitForTimeout(350);
+  await page.evaluate(async () => {
+    for (let i = 0; i < 12 && exam.aktiv; i++) {
+      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+      if (!right) break;
+      right.click();
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  });
+  await page.waitForTimeout(300);
+  const nachL11 = await page.evaluate(() => ({ l11: lektionStatus(11), l12: lektionStatus(12) }));
+  expect(nachL11).toEqual({ l11: 'bestanden', l12: 'offen' });
+
+  const detailL11 = await page.evaluate(async () => {
+    openLektion(11);
+    await new Promise(r => setTimeout(r, 150));
+    var html = document.getElementById('lektion-inhalt').innerHTML;
+    return (html.match(/haraka-card/g) || []).length;
+  });
+  expect(detailL11).toBe(10);
+
+  await page.evaluate(() => { openLektion(12); startLektionCheck(12); });
+  await page.waitForTimeout(350);
+  await page.evaluate(async () => {
+    for (let i = 0; i < 12 && exam.aktiv; i++) {
+      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+      if (!right) break;
+      right.click();
+      await new Promise(r => setTimeout(r, 1400));
+    }
+  });
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => lektionStatus(12))).toBe('bestanden');
+
+  expect(errors).toEqual([]);
+});
+
 test('Lektions-Fragenpools sind für jede spielbare Lektion ≥ 40', async ({ page }) => {
   const errors = [];
   await harden(page, errors);
@@ -226,10 +326,14 @@ test('Lektions-Fragenpools sind für jede spielbare Lektion ≥ 40', async ({ pa
     var out = {};
     STUFE1_LEKTIONEN.forEach(function (l) {
       if (l.contentPending) return;
-      out[l.id] = (l.typ === 'buchstaben') ? buildLektionPoolBuchstaben(l).length : buildLektionPoolHarakat(l).length;
+      if (l.typ === 'buchstaben') out[l.id] = buildLektionPoolBuchstaben(l).length;
+      else if (l.typ === 'sonderzeichen') out[l.id] = buildLektionPoolSonderzeichen().length;
+      else if (l.typ === 'sonne-mond') out[l.id] = buildLektionPoolSonnenMondWort().length + buildLektionPoolSonnenMondArt().length;
+      else out[l.id] = buildLektionPoolHarakat(l).length;
     });
     return out;
   });
+  expect(Object.keys(pools).length).toBe(12); // alle 12 Lektionen haben inzwischen Inhalt
   Object.values(pools).forEach(size => expect(size).toBeGreaterThanOrEqual(40));
   expect(errors).toEqual([]);
 });
