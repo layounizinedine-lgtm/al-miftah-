@@ -26,7 +26,11 @@
 
 **Stufe 1 ist damit inhaltlich vollständig** — alle 12 Lektionen haben echten Inhalt, jedes arabische Schriftphänomen aus der Ist-Analyse (L1) ist abgedeckt.
 
-Nächster Schritt: **AP 1.4/1.5** (Schreibtrainer 2.0 mit Strichfolge, Silbentraining) und/oder **AP 1.6** (Stufenprüfung 2.0 — muss jetzt auch Sonderzeichen/Sonnen-Mond abfragen und cheat-sicher werden, Voraussetzung: alle 12 Lektionen bestanden).
+| **1.6 — Stufenprüfung 2.0** | ☑ erledigt | `buildExam2()` ersetzt `buildExam1()`: **27 Fragen** (6 Erkennen · 4 Hören · 5 Vokale/Tanwin · 5 Lesen · 4 Sonderzeichen · 3 Sonne/Mond), gezogen aus Pools 80–168 (≥5× je Kategorie), Bestehen ab **85 %** (≥23/27). **Zulassungs-Gate:** `startStufenpruefung()` (normaler Weg, u. a. auf der Wörter-Seite) verlangt `alleLektionenBestanden()` (alle 12 Lektionen) und leitet sonst mit Hinweis zurück zum Lektionspfad; `startStufenpruefungSkip()` ("Kann ich schon"-Link) bleibt bewusst die Ausnahme, läuft aber durch **dieselbe** Prüfung. **Anti-Wiederholung:** jeder Versuch merkt sich die gestellten Fragen (`examData.stufe1.letzteFragenIds`) und meidet sie beim nächsten Versuch, solange der Pool das hergibt — verifiziert 0 % Überlappung über 9 aufeinanderfolgende Versuche (Vorgabe: <50 %). **30-Minuten-Cooldown** nach Fehlversuch (Zeitstempel in `localStorage`, übersteht Reload, Guard blockt auch direkten Aufruf); History als `{passed, best, versuche, history:[{ts,score,von}]}` — bereits im für AP 3.1 vorgesehenen Format. Bewusst **nicht** enthalten: der „3 Schreiben"-Anteil aus dem Plan — erfordert die Stroke-Order-Engine aus AP 1.4, die es noch nicht gibt; Threshold entsprechend auf 27 (statt 30) Fragen bezogen. Alte `buildExam1` vollständig entfernt (kein toter Code). Verifiziert: Gate blockt ohne 12/12, Skip funktioniert, Bestehen (27/27) schaltet Stufe 2 frei, Fehlversuch (0/27) setzt Cooldown korrekt. Smoke-Suite: 14/14 Tests grün (2 neu). |
+
+**Stufe 1 hat jetzt eine vollständige, cheat-resistente Abschlussprüfung, die auf allen 12 Lektionen aufbaut.**
+
+Nächster Schritt: **AP 1.4/1.5** (Schreibtrainer 2.0 mit Strichfolge, Silbentraining/Lesefluss) — danach kann die Stufenprüfung um den „3 Schreiben"-Anteil ergänzt werden. Alternativ: Beginn von **Phase 2** (Stufe 2 maximal ausbauen).
 
 *Ab Phase 1 pro AP eine Zeile ergänzen. Format: ☐ offen / ⧗ in Arbeit / ☑ erledigt + Commit-Hash.*
 

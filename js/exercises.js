@@ -843,37 +843,113 @@ function stufe1Bestanden(){
   return !!(examData.stufe1 && examData.stufe1.passed);
 }
 
-/* --- Prüfungs-Fragen bauen: 6 Buchstaben + 4 Hören + 5 Harakat + 5 Wörter = 20 --- */
-function buildExam1(){
+/* ============================================================
+   STUFENPRÜFUNG 2.0 (AP 1.6) — 27 Fragen aus allen 12 Lektionen:
+   6 Erkennen · 4 Hören · 5 Vokale/Tanwin · 5 Lesen · 4 Sonderzeichen ·
+   3 Sonne/Mond. Bestehen ab 85%. Zulassung nur mit allen 12 Lektionen
+   bestanden (Ausnahme: "Kann ich schon"-Skip). 30-Min-Cooldown nach
+   Fehlversuch, Fragen werden pro Versuch aus Pools ≥5× gezogen und
+   meiden dabei die Fragen des letzten Versuchs, damit sich zwei
+   aufeinanderfolgende Prüfungen nicht wiederholen.
+   Bewusst nicht enthalten: der "3 Schreiben"-Anteil aus dem Masterplan —
+   erfordert die Stroke-Order-Engine aus AP 1.4, die es noch nicht gibt.
+   ============================================================ */
+var PRUEFUNG_COOLDOWN_MS = 30 * 60 * 1000;
+function pruefungCooldownRestMs(){
+  var rec = examData.stufe1;
+  if(!rec || !rec.cooldownUntil) return 0;
+  return Math.max(0, rec.cooldownUntil - Date.now());
+}
+function pruefungFrageKey(q){
+  return (q.typ === 'buchstabe' || q.typ === 'hoeren') ? q.audio : q.richtig;
+}
+// Zieht n Fragen aus dem Pool, meidet dabei Fragen aus "vermeiden" (letzter
+// Versuch) — fällt nur auf den vollen Pool zurück, wenn zu wenige frische übrig sind.
+function pruefungOhneWiederholung(pool, n, vermeiden){
+  var frisch = pool.filter(function(q){ return vermeiden.indexOf(pruefungFrageKey(q)) < 0; });
+  var quelle = frisch.length >= n ? frisch : pool;
+  return shuffle(quelle).slice(0, n);
+}
+
+function buildExam2(){
+  var vermeiden = (examData.stufe1 && examData.stufe1.letzteFragenIds) || [];
   var fragen = [];
-  shuffle(ALL_LETTERS).slice(0,6).forEach(function(l){
-    var andere = shuffle(ALL_LETTERS.filter(function(x){ return x.ch !== l.ch; })).slice(0,3);
-    fragen.push({ typ:'buchstabe', frage:'Welcher Buchstabe ist das?', glyph:l.ch,
-      richtig:l.name, optionen: shuffle([l.name].concat(andere.map(function(a){ return a.name; }))), audio:l.ch });
-  });
-  for(var h2=0;h2<4;h2++){
+
+  // 6 Erkennen (Pool 28 Buchstaben × 5 Varianten = 140)
+  var erkennenPool = [];
+  ALL_LETTERS.forEach(function(l){ for(var i=0;i<5;i++){ erkennenPool.push(letterFrageErkennen(l)); } });
+  fragen = fragen.concat(pruefungOhneWiederholung(erkennenPool, 6, vermeiden));
+
+  // 4 Hören (Pool 80)
+  var hoerenPool = [];
+  for(var h=0; h<80; h++){
     var hq = buildHoerQuestion();
-    fragen.push({ typ:'hoeren', frage:'Welchen Buchstaben hörst du?', glyph:null,
+    hoerenPool.push({ typ:'hoeren', frage:'Welchen Buchstaben hörst du?', glyph:null,
       richtig:hq.richtig, optionen:hq.optionen, audio:hq.audio });
   }
-  for(var i=0;i<5;i++){
+  fragen = fragen.concat(pruefungOhneWiederholung(hoerenPool, 4, vermeiden));
+
+  // 5 Vokale/Tanwin (Pool 80, deckt L8-L10 ab)
+  var harakaPool = [];
+  for(var v=0; v<80; v++){
     var q = buildHaQuestion();
-    fragen.push({ typ:'haraka', frage:'Wie wird das ausgesprochen?', glyph:q.anzeige,
+    harakaPool.push({ typ:'haraka', frage:'Wie wird das ausgesprochen?', glyph:q.anzeige,
       richtig:q.richtig, optionen:q.optionen, audio:q.audio });
   }
-  shuffle(ALLE_WOERTER).slice(0,5).forEach(function(w){
-    fragen.push({ typ:'wort', frage:'Wie liest man das?', glyph:w.ar,
-      richtig:w.tr, optionen: shuffle([w.tr].concat(w.falsch)), audio:w.ar, de:w.de });
+  fragen = fragen.concat(pruefungOhneWiederholung(harakaPool, 5, vermeiden));
+
+  // 5 Lesen (Pool 26 Wörter × 5 Varianten = 130)
+  var lesenPool = [];
+  ALLE_WOERTER.forEach(function(w){
+    for(var j=0;j<5;j++){
+      lesenPool.push({ typ:'wort', frage:'Wie liest man das?', glyph:w.ar,
+        richtig:w.tr, optionen: shuffle([w.tr].concat(w.falsch)), audio:w.ar, de:w.de });
+    }
   });
+  fragen = fragen.concat(pruefungOhneWiederholung(lesenPool, 5, vermeiden));
+
+  // 4 Sonderzeichen (L11; Pool 10×3 Erkennen + 20×3 Lesen = 90)
+  var szPool = [];
+  SONDERZEICHEN.forEach(function(s){ for(var k=0;k<3;k++){ szPool.push(sonderzeichenFrageErkennen(s)); } });
+  ALLE_SONDERZEICHEN_WOERTER.forEach(function(w){ for(var m=0;m<3;m++){ szPool.push(sonderzeichenWortFrage(w)); } });
+  fragen = fragen.concat(pruefungOhneWiederholung(szPool, 4, vermeiden));
+
+  // 3 Sonne/Mond (L12; Pool 28×3 Lesen + 28×3 Einordnen = 168)
+  var smPool = [];
+  SONNENMOND_WOERTER.forEach(function(w){ for(var p=0;p<3;p++){ smPool.push(sonnenmondWortFrage(w)); } });
+  SONNENBUCHSTABEN.concat(MONDBUCHSTABEN).forEach(function(ch){ for(var q2=0;q2<3;q2++){ smPool.push(sonnenmondArtFrage(ch)); } });
+  fragen = fragen.concat(pruefungOhneWiederholung(smPool, 3, vermeiden));
+
   return shuffle(fragen);
 }
 
 var exam = { fragen:[], index:0, richtig:0, aktiv:false, mode:'pruefung' };
 
+// Normaler Einstieg: erfordert alle 12 Lektionen bestanden.
 function startStufenpruefung(){
+  if(typeof alleLektionenBestanden === 'function' && !alleLektionenBestanden()){
+    alert('Schließe zuerst alle 12 Lektionen ab, um zur Stufenprüfung zu gelangen.');
+    go('letters');
+    return;
+  }
+  starteStufenpruefungIntern();
+}
+// "Kann ich schon"-Weg: bewusst ohne Lektions-Gate, führt aber durch dieselbe Prüfung.
+function startStufenpruefungSkip(){
+  starteStufenpruefungIntern();
+}
+function starteStufenpruefungIntern(){
+  var restMs = pruefungCooldownRestMs();
+  if(restMs > 0){
+    alert('Der nächste Versuch ist erst in ' + Math.ceil(restMs / 60000) + ' Minuten möglich.');
+    return;
+  }
   exerciseReturnView = 'letters';
-  exam.fragen = buildExam1();
+  exam.fragen = buildExam2();
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'pruefung';
+  examData.stufe1 = examData.stufe1 || { passed:false, best:0, versuche:0, history:[] };
+  examData.stufe1.letzteFragenIds = exam.fragen.map(pruefungFrageKey);
+  saveExams();
   go('exercise');
   renderExamQuestion();
 }
@@ -956,10 +1032,19 @@ function renderExamDone(){
   }
 
   if(exam.mode === 'pruefung'){
-    var bestandenJetzt = exam.richtig >= Math.ceil(n * 0.8);
+    var grenze = Math.ceil(n * 0.85);
+    var bestandenJetzt = exam.richtig >= grenze;
+    var rec = examData.stufe1 || { passed:false, best:0, versuche:0, history:[] };
+    rec.versuche = (rec.versuche || 0) + 1;
+    rec.best = Math.max(rec.best || 0, exam.richtig);
+    rec.history = (rec.history || []).concat([{ ts: Date.now(), score: exam.richtig, von: n }]).slice(-20);
+
     if(bestandenJetzt){
-      var vorher = stufe1Bestanden();
-      examData.stufe1 = { passed:true, best: Math.max(exam.richtig, (examData.stufe1 && examData.stufe1.best) || 0), date: new Date().toISOString() };
+      var vorher = !!rec.passed;
+      rec.passed = true;
+      rec.date = new Date().toISOString();
+      delete rec.cooldownUntil;
+      examData.stufe1 = rec;
       saveExams();
       renderPath('intro-path');
       renderPath('start-path');
@@ -972,12 +1057,19 @@ function renderExamDone(){
           '<button class="btn-gold" onclick="go(\'start\')">Zur Übersicht</button>' +
         '</div>';
     } else {
+      rec.cooldownUntil = Date.now() + PRUEFUNG_COOLDOWN_MS;
+      examData.stufe1 = rec;
+      saveExams();
+      var restMs = pruefungCooldownRestMs();
+      var retryBtn = restMs > 0
+        ? '<button class="btn-gold" disabled>⏳ Nächster Versuch in ' + Math.ceil(restMs / 60000) + ' Min.</button>'
+        : '<button class="btn-gold" onclick="startStufenpruefung()">Nochmal versuchen</button>';
       body.innerHTML =
         '<div class="ex-done">' +
           '<div class="star" style="opacity:.5;">✦</div>' +
           '<h2>' + exam.richtig + ' von ' + n + ' — noch nicht ganz</h2>' +
-          '<p>Du brauchst ' + Math.ceil(n*0.8) + ' richtige Antworten. Übe noch etwas — die Buchstaben, Vokalzeichen und Wörter warten auf dich.</p>' +
-          '<button class="btn-gold" onclick="startStufenpruefung()">Nochmal versuchen</button>' +
+          '<p>Du brauchst ' + grenze + ' richtige Antworten. Übe noch etwas — die Lektionen warten auf dich.</p>' +
+          retryBtn +
           '<div style="margin-top:1rem;">' +
             '<button class="btn-ghost" onclick="go(\'letters\')">Zurück zum Üben</button>' +
           '</div>' +

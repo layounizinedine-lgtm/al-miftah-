@@ -30,6 +30,11 @@ function lektionBestanden(id){
   var data = loadLektionenState();
   return !!(data[id] && data[id].passed);
 }
+// Zulassungsvoraussetzung für die normale Stufenprüfung (AP 1.6):
+// alle 12 Lektionen müssen bestanden sein.
+function alleLektionenBestanden(){
+  return STUFE1_LEKTIONEN.every(function(l){ return lektionBestanden(l.id); });
+}
 
 // Cooldown nach Fehlversuch: 10 Minuten, bevor der Check erneut gestartet werden darf.
 var LEKTION_COOLDOWN_MS = 10 * 60 * 1000;

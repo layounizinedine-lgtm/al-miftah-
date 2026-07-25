@@ -426,3 +426,92 @@ test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ p
   expect(score).toBeLessThan(60);
   expect(errors).toEqual([]);
 });
+
+test('Stufenprüfung 2.0: Zulassungs-Gate, Skip-Weg, Anti-Wiederholung', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  page.on('dialog', d => d.accept()); // die Gate-/Cooldown-Hinweise nutzen alert()
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  // Ohne bestandene Lektionen blockiert der normale Einstieg und leitet zurück.
+  const blocked = await page.evaluate(() => {
+    go('exercise');
+    startStufenpruefung();
+    return document.querySelector('.view.active').id;
+  });
+  expect(blocked).toBe('view-letters');
+
+  // Der "Kann ich schon"-Skip funktioniert trotzdem und liefert 27 Fragen.
+  const skip = await page.evaluate(() => {
+    startStufenpruefungSkip();
+    return { aktiv: exam.aktiv, n: exam.fragen.length };
+  });
+  expect(skip).toEqual({ aktiv: true, n: 27 });
+
+  // Zwei aufeinanderfolgende Versuche teilen < 50% identische Fragen.
+  const overlaps = [];
+  let prevKeys = null;
+  for (let i = 0; i < 5; i++) {
+    const keys = await page.evaluate(() => { startStufenpruefungSkip(); return exam.fragen.map(pruefungFrageKey); });
+    if (prevKeys) {
+      const overlap = keys.filter(k => prevKeys.includes(k)).length / keys.length;
+      overlaps.push(overlap);
+    }
+    prevKeys = keys;
+  }
+  overlaps.forEach(o => expect(o).toBeLessThan(0.5));
+  expect(errors).toEqual([]);
+});
+
+test('Stufenprüfung 2.0: Bestehen schaltet Stufe 2 frei, Fehlversuch setzt 30-Min-Cooldown', async ({ page }) => {
+  test.setTimeout(120000); // zwei komplette 27-Fragen-Durchläufe nacheinander
+  const errors = [];
+  await harden(page, errors);
+  page.on('dialog', d => d.accept());
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  const pass = await page.evaluate(async () => {
+    startStufenpruefungSkip();
+    await new Promise(r => setTimeout(r, 300));
+    for (let i = 0; i < 30 && exam.aktiv; i++) {
+      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+      if (!right) break;
+      right.click();
+      await new Promise(r => setTimeout(r, 1300));
+    }
+    return { richtig: exam.richtig, bestanden: examData.stufe1.passed, historyLen: examData.stufe1.history.length };
+  });
+  expect(pass.richtig).toBe(27);
+  expect(pass.bestanden).toBeTruthy();
+  expect(pass.historyLen).toBeGreaterThan(0);
+
+  await page.evaluate(() => localStorage.removeItem('almiftah_exams'));
+  await page.reload();
+  await page.waitForTimeout(400);
+
+  const fail = await page.evaluate(async () => {
+    startStufenpruefungSkip();
+    await new Promise(r => setTimeout(r, 300));
+    for (let i = 0; i < 30 && exam.aktiv; i++) {
+      const buttons = [...document.querySelectorAll('.ex-option')];
+      const wrong = buttons.find(b => parseInt(b.getAttribute('data-idx'), 10) !== exam.richtigIdx);
+      if (!wrong) break;
+      wrong.click();
+      await new Promise(r => setTimeout(r, 1300));
+    }
+    return { bestanden: examData.stufe1.passed, restMs: pruefungCooldownRestMs() };
+  });
+  expect(fail.bestanden).toBeFalsy();
+  expect(fail.restMs).toBeGreaterThan(0);
+
+  await page.reload();
+  await page.waitForTimeout(400);
+  const restNachReload = await page.evaluate(() => pruefungCooldownRestMs());
+  expect(restNachReload).toBeGreaterThan(0);
+
+  const guard = await page.evaluate(() => { exam.aktiv = false; startStufenpruefungSkip(); return exam.aktiv; });
+  expect(guard).toBe(false);
+  expect(errors).toEqual([]);
+});
