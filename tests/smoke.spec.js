@@ -796,3 +796,100 @@ test('AP 1.5: L9 und L12 zeigen "Silben bauen" und "Schnell-Lesen" Buttons, die 
 
   expect(errors).toEqual([]);
 });
+
+test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bestehen/Cooldown', async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+
+  const gate = await page.evaluate(() => {
+    go('stufe2');
+    return {
+      total: document.querySelectorAll('#kapitel-liste .stop').length,
+      offen: document.querySelectorAll('#kapitel-liste .stop-clickable').length,
+    };
+  });
+  expect(gate.total).toBe(10); // 10 Themenfelder = 10 Kapitel
+  expect(gate.offen).toBe(1); // nur Kapitel 1 zu Beginn offen
+
+  const k0 = await page.evaluate(() => {
+    openKapitel(0);
+    return {
+      total: document.querySelectorAll('#kapitel-pfad .stop').length,
+      offen: document.querySelectorAll('#kapitel-pfad .stop-clickable').length,
+    };
+  });
+  expect(k0.total).toBe(2); // Kapitel 0 hat 2 Lektionen
+  expect(k0.offen).toBe(1); // nur Lektion 1 offen
+
+  const vorKontakt = await page.evaluate(() => alleSrsItems().filter(function (it) { return it.art === 'v'; }).length);
+  expect(vorKontakt).toBe(0); // vor jedem Lektion-2-Besuch: kein Vokabelwort im SRS
+
+  const l1 = await page.evaluate(() => {
+    openLektion2(0, 1);
+    return {
+      karten: document.querySelectorAll('#lektion2-inhalt .haraka-card').length,
+      besucht: loadKapitelState()['0_1'] && loadKapitelState()['0_1'].besucht,
+    };
+  });
+  expect(l1.karten).toBe(7); // Kapitel 0 / Lektion 1 hat 7 Vokabeln (Datenmodell aus vokabeln.js)
+  expect(l1.besucht).toBeTruthy();
+
+  const nachKontakt = await page.evaluate(() => alleSrsItems().filter(function (it) { return it.art === 'v'; }).length);
+  expect(nachKontakt).toBe(7); // SRS übernimmt exakt die Wörter der besuchten Lektion, nicht alle 219
+
+  const pass = await page.evaluate(async () => {
+    startLektion2Check(0, 1);
+    await new Promise((r) => setTimeout(r, 200));
+    for (let i = 0; i < 15 && exam.aktiv; i++) {
+      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+      if (!right) break;
+      right.click();
+      await new Promise((r) => setTimeout(r, 1400));
+    }
+    return { richtig: exam.richtig, n: exam.fragen.length, bestanden: lek2Bestanden(0, 1) };
+  });
+  expect(pass.n).toBe(12);
+  expect(pass.richtig).toBe(12);
+  expect(pass.bestanden).toBeTruthy();
+
+  const nachBestehen = await page.evaluate(() => ({
+    lektion2Offen: lek2Status(0, 2),
+    kapitel1Gesperrt: kapitelStatus(1),
+  }));
+  expect(nachBestehen.lektion2Offen).toBe('offen');
+  expect(nachBestehen.kapitel1Gesperrt).toBe('gesperrt'); // Kapitel 0 noch nicht komplett (Lektion 2 fehlt)
+
+  const fail = await page.evaluate(async () => {
+    openLektion2(0, 2);
+    startLektion2Check(0, 2);
+    await new Promise((r) => setTimeout(r, 200));
+    for (let i = 0; i < 15 && exam.aktiv; i++) {
+      const buttons = [...document.querySelectorAll('.ex-option')];
+      const wrong = buttons.find((b) => parseInt(b.getAttribute('data-idx'), 10) !== exam.richtigIdx);
+      if (!wrong) break;
+      wrong.click();
+      await new Promise((r) => setTimeout(r, 1400));
+    }
+    return { bestanden: lek2Bestanden(0, 2), restMs: lek2CooldownRestMs(0, 2) };
+  });
+  expect(fail.bestanden).toBeFalsy();
+  expect(fail.restMs).toBeGreaterThan(0);
+
+  // Alte, freie Wortschatz-Bibliothek bleibt unangetastet erreichbar
+  const bib = await page.evaluate(async () => {
+    go('woerter-bibliothek');
+    const themenCount = document.querySelectorAll('#themen-list button').length;
+    openThema(1);
+    startVokabelExercise();
+    await new Promise((r) => setTimeout(r, 300));
+    return { themenCount, opts: document.querySelectorAll('.ex-option').length };
+  });
+  expect(bib.themenCount).toBe(10);
+  expect(bib.opts).toBeGreaterThanOrEqual(2);
+
+  expect(errors).toEqual([]);
+});

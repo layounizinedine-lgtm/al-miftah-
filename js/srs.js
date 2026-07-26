@@ -23,8 +23,12 @@ function srsItem(ch){
 }
 function alleSrsItems(){
   var items = ALL_LETTERS.map(function(l){ return { key:l.ch, art:'b', ref:l }; });
-  if(stufe1Bestanden() && typeof ALLE_VOKABELN !== 'undefined'){
-    ALLE_VOKABELN.forEach(function(v){ items.push({ key:'v:'+v.id, art:'v', ref:v }); });
+  // AP 2.1: nur Wörter aus bereits kontaktierten Lektion-2-Lektionen fließen
+  // ins SRS ein ("nach Erst-Kontakt"), nicht der komplette 219-Wörter-Bestand
+  // auf einen Schlag, sobald Stufe 1 besteht.
+  if(stufe1Bestanden() && typeof ALLE_VOKABELN !== 'undefined' && typeof besuchteVokabIds === 'function'){
+    var besucht = besuchteVokabIds();
+    ALLE_VOKABELN.forEach(function(v){ if(besucht.has(v.id)) items.push({ key:'v:'+v.id, art:'v', ref:v }); });
   }
   return items;
 }

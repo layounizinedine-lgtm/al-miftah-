@@ -265,12 +265,17 @@
     <div class="page-head">
       <div class="kicker">Zweite Stufe</div>
       <h1>Wörter &amp; Gespräche</h1>
-      <p>Lerne Vokabeln — und lies sie sofort in echten Gesprächen</p>
+      <p>10 Kapitel, je in Lektionen — jede öffnet die nächste erst, wenn du sie wirklich beherrschst</p>
+      <p style="margin-top:.6rem;">
+        <button class="auth-link" onclick="go('woerter-bibliothek')">📖 Wortschatz-Bibliothek — alle Themenfelder frei erkunden</button>
+      </p>
+    </div>
+
+    <div class="path-section">
+      <div class="path" id="kapitel-liste"><!-- filled by JS --></div>
     </div>
 
     <div class="harakat-list" id="dialoge-list"><!-- filled by JS --></div>
-
-    <div class="harakat-list" id="themen-list"><!-- filled by JS --></div>
 
     <footer class="footer">
       <span class="ar">✦ الْكَلِمَاتُ مَفَاتِيحُ ✦</span>
@@ -278,10 +283,88 @@
     </footer>
   </section>
 
-  <!-- ============ VIEW: THEMA (Vokabelliste) ============ -->
+  <!-- ============ VIEW: KAPITEL (Lektionspfad eines Themenfelds, AP 2.1) ============ -->
+  <section id="view-kapitel" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('stufe2')">‹ Kapitel</button>
+      <div style="text-align:right;">
+        <h2 id="kapitel-titel-ar">فَصْل</h2>
+        <div class="sub">Kapitel</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Zweite Stufe · Kapitel</div>
+      <h1 id="kapitel-head">—</h1>
+      <p id="kapitel-unter">—</p>
+    </div>
+
+    <div class="path-section">
+      <div class="path" id="kapitel-pfad"><!-- filled by JS --></div>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ كَلِمَةٌ بَعْدَ كَلِمَةٍ ✦</span>
+      Wort für Wort.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: LEKTION-2-DETAIL (Vokabeln + Check, AP 2.1) ============ -->
+  <section id="view-lektion2" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('kapitel')">‹ Kapitel</button>
+      <div style="text-align:right;">
+        <h2 id="lektion2-titel-ar">الدَّرْس</h2>
+        <div class="sub">Lektion</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Zweite Stufe · Lektion</div>
+      <h1 id="lektion2-head">—</h1>
+      <p id="lektion2-unter">—</p>
+    </div>
+
+    <div id="lektion2-inhalt" style="max-width:60rem; margin:0 auto; padding:0 1.2rem;"><!-- filled by JS --></div>
+
+    <div style="text-align:center; padding: 2rem 1.5rem 4rem;">
+      <button class="btn-gold" id="lektion2-check-btn" onclick="startLektion2Check(aktuelleLektion2.themaId, aktuelleLektion2.nr)">✦ Lektion-Check starten</button>
+    </div>
+
+    <footer class="footer">
+      <span class="ar">✦ خُطْوَةً خُطْوَةً ✦</span>
+      Schritt für Schritt.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: WOERTER-BIBLIOTHEK (freies Nachschlagen, unabhängig vom Gating) ============ -->
+  <section id="view-woerter-bibliothek" class="view">
+    <div class="topbar">
+      <button class="btn-ghost" onclick="go('stufe2')">‹ Kapitel</button>
+      <div style="text-align:right;">
+        <h2>مُفْرَدَات</h2>
+        <div class="sub">Bibliothek</div>
+      </div>
+    </div>
+
+    <div class="page-head">
+      <div class="kicker">Nachschlagewerk</div>
+      <h1>Alle Themenfelder</h1>
+      <p>Zum Nachschlagen und freien Üben — unabhängig vom Kapitel-Fortschritt</p>
+    </div>
+
+    <div class="harakat-list" id="themen-list"><!-- filled by JS --></div>
+
+    <footer class="footer">
+      <span class="ar">✦ كَلِمَةٌ بَعْدَ كَلِمَةٍ ✦</span>
+      Wort für Wort.
+    </footer>
+  </section>
+
+  <!-- ============ VIEW: THEMA (Vokabelliste, freies Üben aus der Bibliothek) ============ -->
   <section id="view-thema" class="view">
     <div class="topbar">
-      <button class="btn-ghost" onclick="go('stufe2')">‹ Themen</button>
+      <button class="btn-ghost" onclick="go('woerter-bibliothek')">‹ Themen</button>
       <div style="text-align:right;">
         <h2 id="thema-titel-ar">مُفْرَدَات</h2>
         <div class="sub" id="thema-titel-de">Vokabeln</div>
@@ -445,6 +528,7 @@
 <script defer src="js/srs.js"></script>
 <script defer src="js/exercises.js"></script>
 <script defer src="js/lektionen.js"></script>
+<script defer src="js/kapitel.js"></script>
 <script defer src="js/stroke-extract.js"></script>
 <script defer src="js/writing.js"></script>
 <script defer src="js/auth-sync.js"></script>

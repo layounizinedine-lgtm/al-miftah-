@@ -36,8 +36,9 @@ function go(view){
   var el = document.getElementById('view-' + view);
   if(el) el.classList.add('active');
   if(view === 'start' && typeof updateDaily === 'function'){ updateDaily(); }
-  if(view === 'stufe2' && typeof renderThemen === 'function'){ renderThemen(); }
   if(view === 'stufe2' && typeof renderDialoge === 'function'){ renderDialoge(); }
+  if(view === 'stufe2' && typeof renderKapitelListe === 'function'){ renderKapitelListe('kapitel-liste'); }
+  if(view === 'woerter-bibliothek' && typeof renderThemen === 'function'){ renderThemen(); }
   window.scrollTo(0,0);
 }
 

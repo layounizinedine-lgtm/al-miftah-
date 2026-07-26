@@ -1015,7 +1015,7 @@ function examAnswer(btn){
     fb.className = 'ex-feedback bad';
   }
   if(q.srsKey){ srsGrade(q.srsKey, isRight); }
-  if(exam.mode === 'lektion' && !isRight){
+  if((exam.mode === 'lektion' || exam.mode === 'lektion2') && !isRight){
     if(!exam.lektionFalsch) exam.lektionFalsch = [];
     exam.lektionFalsch.push(q);
   }
@@ -1312,6 +1312,11 @@ function renderExamDone(){
 
   if(exam.mode === 'lektion'){
     if(typeof handleLektionExamDone === 'function') handleLektionExamDone();
+    return;
+  }
+
+  if(exam.mode === 'lektion2'){
+    if(typeof handleLektion2ExamDone === 'function') handleLektion2ExamDone();
     return;
   }
 

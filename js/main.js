@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function(){
   renderWoerter();
   renderThemen();
   renderDialoge();
+  renderKapitelListe('kapitel-liste');
   initSupabase();
   updateAccountUI();
   if('speechSynthesis' in window){
