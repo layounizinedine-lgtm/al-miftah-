@@ -988,3 +988,57 @@ test('AP 2.2: Dialog-Quiz mit 5 Fragen inkl. 2 Kachel-Satz-Produktionsfragen', a
   expect(quiz.richtig).toBe(5);
   expect(errors).toEqual([]);
 });
+
+test('AP 2.2: 3 neue Dialoge (Restaurant/Moschee/Telefon) — 10-14 Zeilen, Rollenspiel + Quiz funktionieren', async ({ page }) => {
+  test.setTimeout(60000);
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+  await page.evaluate(() => document.body.click());
+
+  const total = await page.evaluate(() => DIALOGE.length);
+  expect(total).toBe(8); // 5 bestehende + 3 neue
+
+  for (const id of [5, 6, 7]) {
+    const result = await page.evaluate(async (dialogId) => {
+      go('stufe2');
+      openDialog(dialogId);
+      const zeilenCount = aktuellerDialog.zeilen.length;
+
+      setDialogMode('rollenspiel');
+      const bZeileIdx = aktuellerDialog.zeilen.findIndex((z) => z.s === 'B');
+      const woerter = dialogZeileWoerter(aktuellerDialog.zeilen[bZeileIdx].ar);
+      for (let wi = 0; wi < woerter.length; wi++) {
+        const btn = document.querySelector('.silben-kachel[onclick*="dlgRollenspielTippe(' + bZeileIdx + ',' + wi + ',"]');
+        if (!btn) return { fehler: 'Kachel fehlt' };
+        btn.click();
+      }
+      await new Promise((r) => setTimeout(r, 900));
+      const rollenspielOk = document.querySelectorAll('#dialog-body .dlg-ar').length > 0;
+
+      setDialogMode('lesen');
+      startDialogQuiz();
+      for (let i = 0; i < exam.fragen.length; i++) {
+        const q = exam.fragen[exam.index];
+        if (q.typ === 'kachelsatz') {
+          for (let wi2 = 0; wi2 < q.woerter.length; wi2++) {
+            document.querySelector('.silben-kachel[data-i="' + wi2 + '"]').click();
+          }
+        } else {
+          document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]').click();
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      return { zeilenCount, rollenspielOk, richtig: exam.richtig, n: exam.fragen.length };
+    }, id);
+    expect(result.zeilenCount).toBeGreaterThanOrEqual(10);
+    expect(result.zeilenCount).toBeLessThanOrEqual(14);
+    expect(result.rollenspielOk).toBeTruthy();
+    expect(result.richtig).toBe(5);
+    expect(result.n).toBe(5);
+  }
+
+  expect(errors).toEqual([]);
+});

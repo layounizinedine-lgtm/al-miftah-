@@ -89,6 +89,71 @@ var DIALOGE = [
         richtig:'in der Küche', optionen:['in der Küche','im Klassenzimmer','auf dem Markt','im Garten'] },
       { typ:'dear', frage:'Wie antwortest du auf „schukran"?', glyph:'„Gern geschehen!"',
         richtig:'عَفْوًا', optionen:['عَفْوًا','شُكْرًا','نَعَمْ','أَهْلًا'] }
+    ]},
+  { id:5, titelAr:'فِي الْمَطْعَمِ', titel:'Im Restaurant', unter:'Essen, Obst und Gemüse bestellen und loben',
+    zeilen:[
+      { s:'A', ar:'هَلْ هَذَا مَطْعَمٌ جَيِّدٌ؟', tr:'hal hādhā maṭʿamun dschayyid?', de:'Ist das ein gutes Restaurant?' },
+      { s:'B', ar:'نَعَمْ، الطَّعَامُ هُنَا رَائِعٌ.', tr:'naʿam, aṭ-ṭaʿāmu hunā rāʾiʿ.', de:'Ja, das Essen hier ist wunderbar.' },
+      { s:'A', ar:'أَيْنَ الْمَائِدَةُ؟', tr:'aina l-māʾida?', de:'Wo ist der Esstisch?' },
+      { s:'B', ar:'هِيَ هُنَاكَ.', tr:'hiya hunāka.', de:'Er ist dort.' },
+      { s:'A', ar:'مَنْ هَذَا؟', tr:'man hādhā?', de:'Wer ist das?' },
+      { s:'B', ar:'هَذَا الطَّبَّاخُ. اِسْمُهُ أَحْمَدُ.', tr:'hādhā ṭ-ṭabbāch. ismuhu aḥmad.', de:'Das ist der Koch. Er heißt Ahmad.' },
+      { s:'A', ar:'هَلْ عِنْدَكُمْ فَاكِهَةٌ وَخَضْرَوَاتٌ؟', tr:'hal ʿindakum fākihatun wa-chaḍrawāt?', de:'Habt ihr Obst und Gemüse?' },
+      { s:'B', ar:'نَعَمْ، عِنْدَنَا كُلُّ شَيْءٍ.', tr:'naʿam, ʿindanā kullu schaiʾ.', de:'Ja, wir haben alles.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا! هَذَا مَكَانٌ رَائِعٌ.', tr:'schukran dschazīlan! hādhā makānun rāʾiʿ.', de:'Vielen Dank! Das ist ein wunderbarer Ort.' },
+      { s:'B', ar:'مَعَ السَّلَامَةِ!', tr:'maʿa s-salāma!', de:'Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wie ist das Essen laut B?', glyph:'الطَّعَامُ هُنَا رَائِعٌ.',
+        richtig:'wunderbar', optionen:['wunderbar','schlecht','teuer','kalt'] },
+      { typ:'wort', frage:'Wer ist Ahmad hier?', glyph:'هَذَا الطَّبَّاخُ. اِسْمُهُ أَحْمَدُ.',
+        richtig:'der Koch', optionen:['der Koch','der Lehrer','der Bruder','der Vater'] },
+      { typ:'dear', frage:'Wie fragst du, ob es Obst und Gemüse gibt?', glyph:'„Habt ihr Obst und Gemüse?"',
+        richtig:'هَلْ عِنْدَكُمْ فَاكِهَةٌ وَخَضْرَوَاتٌ؟', optionen:['هَلْ عِنْدَكُمْ فَاكِهَةٌ وَخَضْرَوَاتٌ؟','هَلْ عِنْدَكَ قَلَمٌ؟','أَيْنَ الْمُعَلِّمُ؟','مَنْ هَذَا؟'] }
+    ]},
+  { id:6, titelAr:'الطَّرِيقُ إِلَى الْمَسْجِدِ', titel:'Der Weg zur Moschee', unter:'Nach dem Weg fragen, rechts und links',
+    zeilen:[
+      { s:'A', ar:'أَيْنَ الْمَسْجِدُ؟', tr:'aina l-masdschidu?', de:'Wo ist die Moschee?' },
+      { s:'B', ar:'الْمَسْجِدُ قَرِيبٌ مِنْ هُنَا.', tr:'al-masdschidu qarībun min hunā.', de:'Die Moschee ist nah von hier.' },
+      { s:'A', ar:'هَلِ الْمَسْجِدُ عَلَى الْيَمِينِ؟', tr:'hali l-masdschidu ʿalā l-yamīn?', de:'Ist die Moschee rechts?' },
+      { s:'B', ar:'لَا، هُوَ عَلَى الْيَسَارِ.', tr:'lā, huwa ʿalā l-yasār.', de:'Nein, sie ist links.' },
+      { s:'A', ar:'هَلْ هُوَ أَمَامَ الْمَتْجَرِ؟', tr:'hal huwa amāma l-matdschar?', de:'Ist sie vor dem Laden?' },
+      { s:'B', ar:'نَعَمْ. خَلْفَ الْمَسْجِدِ سُوقٌ كَبِيرٌ.', tr:'naʿam. chalfa l-masdschidi sūqun kabīr.', de:'Ja. Hinter der Moschee ist ein großer Markt.' },
+      { s:'A', ar:'هَلِ الطَّرِيقُ بَعِيدٌ؟', tr:'hali ṭ-ṭarīqu baʿīd?', de:'Ist der Weg weit?' },
+      { s:'B', ar:'لَا، هُوَ قَرِيبٌ.', tr:'lā, huwa qarīb.', de:'Nein, er ist nah.' },
+      { s:'A', ar:'هَلْ عِنْدَكَ دَرَّاجَةٌ؟', tr:'hal ʿindaka darrādscha?', de:'Hast du ein Fahrrad?' },
+      { s:'B', ar:'لَا، عِنْدِي سَيَّارَةٌ.', tr:'lā, ʿindī sayyāra.', de:'Nein, ich habe ein Auto.' },
+      { s:'A', ar:'هَيَّا بِنَا!', tr:'hayyā binā!', de:'Los, gehen wir!' },
+      { s:'B', ar:'نَعَمْ، هَيَّا بِنَا.', tr:'naʿam, hayyā binā.', de:'Ja, los geht’s.' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wo ist die Moschee laut B?', glyph:'الْمَسْجِدُ قَرِيبٌ مِنْ هُنَا.',
+        richtig:'nah von hier', optionen:['nah von hier','weit von hier','hinter dem Haus','im Markt'] },
+      { typ:'wort', frage:'Was ist hinter der Moschee?', glyph:'خَلْفَ الْمَسْجِدِ سُوقٌ كَبِيرٌ.',
+        richtig:'ein großer Markt', optionen:['ein großer Markt','ein kleines Haus','eine Schule','ein Restaurant'] },
+      { typ:'dear', frage:'Wie fragst du, ob der Weg weit ist?', glyph:'„Ist der Weg weit?"',
+        richtig:'هَلِ الطَّرِيقُ بَعِيدٌ؟', optionen:['هَلِ الطَّرِيقُ بَعِيدٌ؟','أَيْنَ الْمَسْجِدُ؟','هَلْ عِنْدَكَ دَرَّاجَةٌ؟','مَنْ هَذَا؟'] }
+    ]},
+  { id:7, titelAr:'عَلَى الْهَاتِفِ', titel:'Am Telefon', unter:'Sich am Telefon vorstellen und nach jemandem fragen',
+    zeilen:[
+      { s:'A', ar:'هَلْ هَذَا هَاتِفُ كَرِيمٍ؟', tr:'hal hādhā hātifu karīm?', de:'Ist das Karims Telefon?' },
+      { s:'B', ar:'نَعَمْ، أَنَا كَرِيمٌ. مَنْ أَنْتَ؟', tr:'naʿam, anā karīm. man anta?', de:'Ja, ich bin Karim. Wer bist du?' },
+      { s:'A', ar:'أَنَا أَحْمَدُ، صَدِيقُكَ.', tr:'anā aḥmad, ṣadīquka.', de:'Ich bin Ahmad, dein Freund.' },
+      { s:'B', ar:'أَهْلًا أَحْمَدُ! كَيْفَ حَالُكَ؟', tr:'ahlan aḥmad! kaifa ḥāluka?', de:'Hallo Ahmad! Wie geht es dir?' },
+      { s:'A', ar:'بِخَيْرٍ، شُكْرًا. أَيْنَ أَنْتَ؟', tr:'bi-chairin, schukran. aina anta?', de:'Gut, danke. Wo bist du?' },
+      { s:'B', ar:'أَنَا فِي الْعَمَلِ.', tr:'anā fī l-ʿamal.', de:'Ich bin bei der Arbeit.' },
+      { s:'A', ar:'وَأَيْنَ زَمِيلُكَ؟', tr:'wa-aina zamīluka?', de:'Und wo ist dein Kollege?' },
+      { s:'B', ar:'هُوَ فِي الْبَيْتِ الْيَوْمَ.', tr:'huwa fī l-baiti l-yaum.', de:'Er ist heute zu Hause.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا!', tr:'schukran dschazīlan!', de:'Vielen Dank!' },
+      { s:'B', ar:'عَفْوًا! مَعَ السَّلَامَةِ!', tr:'ʿafwan! maʿa s-salāma!', de:'Gern geschehen! Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wer ruft an?', glyph:'أَنَا أَحْمَدُ، صَدِيقُكَ.',
+        richtig:'Ahmad, ein Freund', optionen:['Ahmad, ein Freund','der Lehrer','die Schwester','ein Kollege'] },
+      { typ:'wort', frage:'Wo ist Karim gerade?', glyph:'أَنَا فِي الْعَمَلِ.',
+        richtig:'bei der Arbeit', optionen:['bei der Arbeit','zu Hause','in der Schule','im Restaurant'] },
+      { typ:'dear', frage:'Wie fragst du nach dem Kollegen?', glyph:'„Und wo ist dein Kollege?"',
+        richtig:'وَأَيْنَ زَمِيلُكَ؟', optionen:['وَأَيْنَ زَمِيلُكَ؟','مَنْ أَنْتَ؟','أَيْنَ الْمَسْجِدُ؟','كَيْفَ حَالُكَ؟'] }
     ]}
 ];
 /* ============================================================
@@ -114,7 +179,13 @@ var FUNKTIONSWOERTER = [
   'اسْمُكَ','اِسْمِي','اِسْمُهُ','حَالُكَ','بِخَيْرٍ','عِنْدَكَ','بَيْتُكُمْ','بَيْتُنَا','أَخِي','أُخْتِي','أُمِّي',
   'الصَّفِّ','الطَّاوِلَةِ','الْجَمِيلُ','الْمَطْبَخِ','الْمُعَلِّمُ','الْمِفْتَاحُ','لِلْمُعَلِّمِ','وَكِتَابٌ','طَالِبَةٌ','جَزِيلًا',
   // Eigennamen
-  'أَحْمَدُ','كَرِيمٌ','عُمَرُ','مِصْرَ','أَلْمَانْيَا'
+  'أَحْمَدُ','كَرِيمٌ','عُمَرُ','مِصْرَ','أَلْمَانْيَا',
+  // AP 2.2 — Restaurant/Moschee/Telefon: weitere gebundene Formen (Artikel,
+  // Kasusendungen, Possessivsuffixe) bereits bekannter Vokabeln + ergänzende
+  // feste Ausdrücke.
+  'لَا','هَلِ','الطَّعَامُ','الْمَائِدَةُ','الطَّبَّاخُ','عِنْدَكُمْ','وَخَضْرَوَاتٌ','عِنْدَنَا','كُلُّ','شَيْءٍ',
+  'الْمَسْجِدُ','الْيَمِينِ','الْيَسَارِ','الْمَتْجَرِ','الْمَسْجِدِ','الطَّرِيقُ',
+  'هَاتِفُ','كَرِيمٍ','صَدِيقُكَ','أَهْلًا','الْعَمَلِ','زَمِيلُكَ','الْبَيْتِ'
 ];
 
 // Zerlegt eine Dialogzeile in Wörter (Satzzeichen entfernt).
