@@ -79,6 +79,11 @@ function buildDailySession(){
     var pool = silbenPool();
     if(pool.length){ fragen.push(silbenFrage(pool[Math.floor(Math.random() * pool.length)])); }
   }
+  // AP 2.3: eine Kachel-Satz-Frage aus bereits kontaktiertem Vokabular, wenn vorhanden.
+  if(typeof satzbauPoolBesucht === 'function' && typeof satzbauFrage === 'function'){
+    var sbPool = satzbauPoolBesucht();
+    if(sbPool.length){ fragen.push(satzbauFrage(sbPool[Math.floor(Math.random() * sbPool.length)])); }
+  }
   return shuffle(fragen);
 }
 

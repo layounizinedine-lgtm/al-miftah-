@@ -1021,6 +1021,37 @@ function dlgKachelsatzTippe(i, btn){
   }
 }
 
+/* ============================================================
+   SATZBAU-ÜBUNG (AP 2.3) — Kachel-Sätze aus den Beispielsätzen der
+   Vokabeln (exampleArabic/exampleTranslation). Nutzt denselben
+   generischen Mechanismus wie die Kachel-Satz-Fragen im Dialog-Quiz
+   (AP 2.2): renderKachelsatzFrage()/dlgKachelsatzTippe() sind bereits
+   typ-generisch und werden hier unverändert wiederverwendet.
+   Der Distraktor wird strukturell außerhalb der Satzwörter gewählt
+   (Filter schließt sie aus) — er kann daher nie Teil der Lösung sein.
+   ============================================================ */
+function satzbauEintragVonVokabel(v){
+  if(!v || !v.exampleArabic || !v.exampleTranslation || !v.exampleTranslation.de) return null;
+  var woerter = dialogZeileWoerter(v.exampleArabic);
+  if(woerter.length < 2) return null;
+  return { ar:v.exampleArabic, woerter:woerter, de:v.exampleTranslation.de };
+}
+function satzbauPool(){
+  return ALLE_VOKABELN.map(satzbauEintragVonVokabel).filter(Boolean);
+}
+// Nur Sätze aus bereits kontaktierten Lektion-2-Lektionen (Erstkontakt-Prinzip
+// aus AP 2.1) — für die Tages-Session, damit dort nichts Unbekanntes auftaucht.
+function satzbauPoolBesucht(){
+  if(typeof besuchteVokabIds !== 'function') return [];
+  var besucht = besuchteVokabIds();
+  return ALLE_VOKABELN.filter(function(v){ return besucht.has(v.id); }).map(satzbauEintragVonVokabel).filter(Boolean);
+}
+function satzbauFrage(eintrag){
+  var vokForms = ALLE_VOKABELN.map(function(v){ return v.arabic; });
+  var kandidaten = shuffle(FUNKTIONSWOERTER.concat(vokForms).filter(function(w){ return eintrag.woerter.indexOf(w) === -1; }));
+  return { typ:'kachelsatz', frage:'Baue den Satz aus den Kacheln', woerter:eintrag.woerter, distraktor:kandidaten[0], tr:eintrag.de, de:eintrag.de, ar:eintrag.ar };
+}
+
 
 /* ============================================================
    STUFENPRÜFUNG — 20 gemischte Fragen, ab 80% bestanden

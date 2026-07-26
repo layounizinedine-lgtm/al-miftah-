@@ -852,9 +852,16 @@ test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bes
     startLektion2Check(0, 1);
     await new Promise((r) => setTimeout(r, 200));
     for (let i = 0; i < 15 && exam.aktiv; i++) {
-      const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
-      if (!right) break;
-      right.click();
+      const q = exam.fragen[exam.index];
+      if (q.typ === 'kachelsatz') {
+        for (let wi = 0; wi < q.woerter.length; wi++) {
+          document.querySelector('.silben-kachel[data-i="' + wi + '"]').click();
+        }
+      } else {
+        const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
+        if (!right) break;
+        right.click();
+      }
       await new Promise((r) => setTimeout(r, 1400));
     }
     return { richtig: exam.richtig, n: exam.fragen.length, bestanden: lek2Bestanden(0, 1) };
@@ -875,10 +882,21 @@ test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bes
     startLektion2Check(0, 2);
     await new Promise((r) => setTimeout(r, 200));
     for (let i = 0; i < 15 && exam.aktiv; i++) {
-      const buttons = [...document.querySelectorAll('.ex-option')];
-      const wrong = buttons.find((b) => parseInt(b.getAttribute('data-idx'), 10) !== exam.richtigIdx);
-      if (!wrong) break;
-      wrong.click();
+      const q = exam.fragen[exam.index];
+      if (q.typ === 'kachelsatz') {
+        // Kachelsatz lässt sich nicht "falsch" beantworten (nur verzögert
+        // richtig) — hier korrekt lösen, damit der Check trotzdem weiterläuft;
+        // die restlichen MC-Fragen werden bewusst falsch beantwortet, sodass
+        // 10/12 nicht erreicht werden und der Check insgesamt scheitert.
+        for (let wi = 0; wi < q.woerter.length; wi++) {
+          document.querySelector('.silben-kachel[data-i="' + wi + '"]').click();
+        }
+      } else {
+        const buttons = [...document.querySelectorAll('.ex-option')];
+        const wrong = buttons.find((b) => parseInt(b.getAttribute('data-idx'), 10) !== exam.richtigIdx);
+        if (!wrong) break;
+        wrong.click();
+      }
       await new Promise((r) => setTimeout(r, 1400));
     }
     return { bestanden: lek2Bestanden(0, 2), restMs: lek2CooldownRestMs(0, 2) };
@@ -1113,6 +1131,60 @@ test('AP 2.2: 4 weitere neue Dialoge (Markt/Arzt/Nachbar/Uhrzeit) + neues Kapite
   expect(zahlen.totalKapitel).toBe(zahlen.themenAnzahl);
   expect(zahlen.zahlenVocabCount).toBe(10);
   expect(zahlen.zahlenLektionen).toBe(2);
+
+  expect(errors).toEqual([]);
+});
+
+test('AP 2.3: Satzbau-Übung (Kachel-Sätze aus Vokabel-Beispielsätzen) — Pool, Distraktor-Invariante, Integration', async ({ page }) => {
+  test.setTimeout(30000);
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+  await page.evaluate(() => document.body.click());
+
+  const poolCheck = await page.evaluate(() => {
+    const pool = satzbauPool();
+    let badDistraktor = 0;
+    for (let i = 0; i < 300; i++) {
+      const e = pool[Math.floor(Math.random() * pool.length)];
+      const q = satzbauFrage(e);
+      if (q.woerter.indexOf(q.distraktor) !== -1) badDistraktor++;
+    }
+    return { poolSize: pool.length, badDistraktor };
+  });
+  expect(poolCheck.poolSize).toBeGreaterThanOrEqual(60);
+  expect(poolCheck.badDistraktor).toBe(0);
+
+  const lek2 = await page.evaluate(async () => {
+    startLektion2Check(0, 1);
+    await new Promise((r) => setTimeout(r, 200));
+    const typen = [];
+    for (let i = 0; i < exam.fragen.length; i++) {
+      const q = exam.fragen[exam.index];
+      typen.push(q.typ);
+      if (q.typ === 'kachelsatz') {
+        for (let wi = 0; wi < q.woerter.length; wi++) {
+          document.querySelector('.silben-kachel[data-i="' + wi + '"]').click();
+        }
+      } else {
+        document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]').click();
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    return { n: typen.length, kachelsatzCount: typen.filter((t) => t === 'kachelsatz').length, richtig: exam.richtig, bestanden: lek2Bestanden(0, 1) };
+  });
+  expect(lek2.n).toBe(12);
+  expect(lek2.kachelsatzCount).toBe(1);
+  expect(lek2.richtig).toBe(12);
+  expect(lek2.bestanden).toBeTruthy();
+
+  const daily = await page.evaluate(() => {
+    const session = buildDailySession();
+    return { kachelsatzCount: session.filter((q) => q.typ === 'kachelsatz').length };
+  });
+  expect(daily.kachelsatzCount).toBeGreaterThanOrEqual(1); // Lektion 0_1 wurde gerade kontaktiert
 
   expect(errors).toEqual([]);
 });

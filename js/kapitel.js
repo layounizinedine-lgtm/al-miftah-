@@ -258,7 +258,18 @@ function alleBisherigenVokabIds(themaId, nr){
 }
 
 function buildLektion2Fragen(lek){
-  var n = 12;
+  // AP 2.3: eine der 12 Fragen ist eine Kachel-Satz-Frage (Satzbau), aus
+  // dem Beispielsatz eines Worts dieser Lektion abgeleitet — belegt einen
+  // Platz analog zur Schreibaufgabe in Stufe 1 (AP 1.4).
+  var satzbauEintrag = null;
+  if(typeof satzbauEintragVonVokabel === 'function'){
+    var kandidaten = shuffle(lek.vokabeln.slice());
+    for(var i=0;i<kandidaten.length;i++){
+      var e = satzbauEintragVonVokabel(kandidaten[i]);
+      if(e){ satzbauEintrag = e; break; }
+    }
+  }
+  var n = satzbauEintrag ? 11 : 12;
   var reviewIds = alleBisherigenVokabIds(lek.themaId, lek.nr);
   var reviewCount = reviewIds.length ? 3 : 0;
   var neuCount = n - reviewCount;
@@ -277,7 +288,9 @@ function buildLektion2Fragen(lek){
       return v ? vokFrage(v) : null;
     }).filter(Boolean);
   }
-  return shuffle(pflicht.concat(rest, reviewAuswahl)).slice(0, n);
+  var fragen = shuffle(pflicht.concat(rest, reviewAuswahl)).slice(0, n);
+  if(satzbauEintrag) fragen.push(satzbauFrage(satzbauEintrag));
+  return shuffle(fragen);
 }
 
 function lek2Bestehensgrenze(n){ return Math.ceil(n * (10 / 12)); } // 10/12
