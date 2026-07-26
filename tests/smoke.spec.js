@@ -112,13 +112,19 @@ test('Stufe-2-Übungen starten mit gültigen Optionen', async ({ page }) => {
   expect(vok.hasRight).toBeTruthy();
   await page.waitForTimeout(1600);
 
-  // Dialog-Quiz
+  // Dialog-Quiz — seit AP 2.2 gemischt aus MC- und Kachelsatz-Fragen; die
+  // erste gerenderte Frage kann von beiderlei Typ sein.
   const dlg = await page.evaluate(async () => {
     go('stufe2'); openDialog(0); startDialogQuiz();
     await new Promise(r => setTimeout(r, 350));
+    const q = exam.fragen[exam.index];
+    if (q.typ === 'kachelsatz') {
+      const kacheln = document.querySelectorAll('.silben-kachel');
+      return { typ: q.typ, opts: kacheln.length, hasRight: kacheln.length > 0 };
+    }
     const btns = document.querySelectorAll('.ex-option');
     const right = document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]');
-    return { opts: btns.length, hasRight: !!right };
+    return { typ: q.typ, opts: btns.length, hasRight: !!right };
   });
   expect(dlg.opts).toBeGreaterThanOrEqual(2);
   expect(dlg.hasRight).toBeTruthy();
