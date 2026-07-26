@@ -154,6 +154,92 @@ var DIALOGE = [
         richtig:'bei der Arbeit', optionen:['bei der Arbeit','zu Hause','in der Schule','im Restaurant'] },
       { typ:'dear', frage:'Wie fragst du nach dem Kollegen?', glyph:'„Und wo ist dein Kollege?"',
         richtig:'وَأَيْنَ زَمِيلُكَ؟', optionen:['وَأَيْنَ زَمِيلُكَ؟','مَنْ أَنْتَ؟','أَيْنَ الْمَسْجِدُ؟','كَيْفَ حَالُكَ؟'] }
+    ]},
+  { id:8, titelAr:'فِي السُّوقِ', titel:'Auf dem Markt', unter:'Obst, Gemüse und Zahlen von eins bis zehn',
+    zeilen:[
+      { s:'A', ar:'أَنَا فِي السُّوقِ.', tr:'anā fī s-sūq.', de:'Ich bin auf dem Markt.' },
+      { s:'B', ar:'هَلْ عِنْدَهُمْ فَاكِهَةٌ؟', tr:'hal ʿindahum fākiha?', de:'Haben sie Obst?' },
+      { s:'A', ar:'نَعَمْ، وَخَضْرَوَاتٌ أَيْضًا.', tr:'naʿam, wa-chaḍrawātun aiḍan.', de:'Ja, und auch Gemüse.' },
+      { s:'B', ar:'كَمِ السِّعْرُ؟', tr:'kami s-siʿr?', de:'Wie ist der Preis?' },
+      { s:'A', ar:'هَذَا خَمْسَةٌ.', tr:'hādhā chamsa.', de:'Das ist fünf.' },
+      { s:'B', ar:'وَهَذَا؟', tr:'wa-hādhā?', de:'Und das?' },
+      { s:'A', ar:'هَذَا عَشَرَةٌ.', tr:'hādhā ʿaschara.', de:'Das ist zehn.' },
+      { s:'B', ar:'وَهَذَا أَيْضًا؟', tr:'wa-hādhā aiḍan?', de:'Und das auch?' },
+      { s:'A', ar:'هَذَا ثَلَاثَةٌ.', tr:'hādhā thalātha.', de:'Das ist drei.' },
+      { s:'B', ar:'عِنْدِي نُقُودٌ. هَذَا جَيِّدٌ.', tr:'ʿindī nuqūd. hādhā dschayyid.', de:'Ich habe Geld. Das ist gut.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا! هَذَا سُوقٌ رَائِعٌ.', tr:'schukran dschazīlan! hādhā sūqun rāʾiʿ.', de:'Vielen Dank! Das ist ein wunderbarer Markt.' },
+      { s:'B', ar:'مَعَ السَّلَامَةِ!', tr:'maʿa s-salāma!', de:'Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Was hat der Markt laut A auch?', glyph:'وَخَضْرَوَاتٌ أَيْضًا.',
+        richtig:'auch Gemüse', optionen:['auch Gemüse','auch Fleisch','auch Brot','auch Fisch'] },
+      { typ:'wort', frage:'Was kostet das erste Ding?', glyph:'هَذَا خَمْسَةٌ.',
+        richtig:'fünf', optionen:['fünf','zehn','drei','zwei'] },
+      { typ:'dear', frage:'Wie fragst du nach dem Preis?', glyph:'„Wie ist der Preis?"',
+        richtig:'كَمِ السِّعْرُ؟', optionen:['كَمِ السِّعْرُ؟','أَيْنَ السُّوقُ؟','هَلْ عِنْدَهُمْ فَاكِهَةٌ؟','مَنْ هَذَا؟'] }
+    ]},
+  { id:9, titelAr:'عِنْدَ الطَّبِيبِ', titel:'Beim Arzt', unter:'Krank sein und den Arzt aufsuchen',
+    zeilen:[
+      { s:'A', ar:'أَنَا مَرِيضٌ.', tr:'anā marīḍ.', de:'Ich bin krank.' },
+      { s:'B', ar:'أَيْنَ الطَّبِيبُ؟', tr:'aina ṭ-ṭabīb?', de:'Wo ist der Arzt?' },
+      { s:'A', ar:'هُوَ فِي الْمُسْتَشْفَى.', tr:'huwa fī l-mustaschfā.', de:'Er ist im Krankenhaus.' },
+      { s:'B', ar:'هَلْ عِنْدَكَ سُؤَالٌ لِلطَّبِيبِ؟', tr:'hal ʿindaka suʾālun liṭ-ṭabīb?', de:'Hast du eine Frage an den Arzt?' },
+      { s:'A', ar:'نَعَمْ، عِنْدِي سُؤَالٌ.', tr:'naʿam, ʿindī suʾāl.', de:'Ja, ich habe eine Frage.' },
+      { s:'B', ar:'هَلْ أَنْتَ مَرِيضٌ؟', tr:'hal anta marīḍ?', de:'Bist du krank?' },
+      { s:'A', ar:'نَعَمْ، أَنَا مَرِيضٌ.', tr:'naʿam, anā marīḍ.', de:'Ja, ich bin krank.' },
+      { s:'B', ar:'الطَّبِيبُ هُنَا.', tr:'aṭ-ṭabību hunā.', de:'Der Arzt ist hier.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا!', tr:'schukran dschazīlan!', de:'Vielen Dank!' },
+      { s:'B', ar:'عَفْوًا! مَعَ السَّلَامَةِ!', tr:'ʿafwan! maʿa s-salāma!', de:'Gern geschehen! Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wie fühlt sich A?', glyph:'أَنَا مَرِيضٌ.',
+        richtig:'krank', optionen:['krank','müde','glücklich','hungrig'] },
+      { typ:'wort', frage:'Wo ist der Arzt?', glyph:'هُوَ فِي الْمُسْتَشْفَى.',
+        richtig:'im Krankenhaus', optionen:['im Krankenhaus','zu Hause','in der Schule','auf dem Markt'] },
+      { typ:'dear', frage:'Wie fragst du, wo der Arzt ist?', glyph:'„Wo ist der Arzt?"',
+        richtig:'أَيْنَ الطَّبِيبُ؟', optionen:['أَيْنَ الطَّبِيبُ؟','مَنْ هَذَا؟','هَلْ أَنْتَ مَرِيضٌ؟','أَيْنَ الْمُسْتَشْفَى؟'] }
+    ]},
+  { id:10, titelAr:'عِنْدَ الْجَارِ', titel:'Beim Nachbarn', unter:'Den Nachbarn und seine Familie kennenlernen',
+    zeilen:[
+      { s:'A', ar:'مَنْ هَذَا؟', tr:'man hādhā?', de:'Wer ist das?' },
+      { s:'B', ar:'هَذَا جَارِي.', tr:'hādhā dschārī.', de:'Das ist mein Nachbar.' },
+      { s:'A', ar:'أَيْنَ بَيْتُهُ؟', tr:'aina baituhu?', de:'Wo ist sein Haus?' },
+      { s:'B', ar:'بَيْتُهُ قَرِيبٌ مِنْ بَيْتِنَا.', tr:'baituhu qarībun min baitinā.', de:'Sein Haus ist nah bei unserem Haus.' },
+      { s:'A', ar:'هَلْ هُوَ صَدِيقُكَ؟', tr:'hal huwa ṣadīquka?', de:'Ist er dein Freund?' },
+      { s:'B', ar:'نَعَمْ، هُوَ صَدِيقٌ جَيِّدٌ.', tr:'naʿam, huwa ṣadīqun dschayyid.', de:'Ja, er ist ein guter Freund.' },
+      { s:'A', ar:'هَلْ عِنْدَهُ أُسْرَةٌ؟', tr:'hal ʿindahu usra?', de:'Hat er eine Familie?' },
+      { s:'B', ar:'نَعَمْ، عِنْدَهُ عَائِلَةٌ.', tr:'naʿam, ʿindahu ʿāʾila.', de:'Ja, er hat eine Familie.' },
+      { s:'A', ar:'شُكْرًا! هَذَا جَارٌ رَائِعٌ.', tr:'schukran! hādhā dschārun rāʾiʿ.', de:'Danke! Das ist ein wunderbarer Nachbar.' },
+      { s:'B', ar:'مَعَ السَّلَامَةِ!', tr:'maʿa s-salāma!', de:'Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wer ist die Person?', glyph:'هَذَا جَارِي.',
+        richtig:'mein Nachbar', optionen:['mein Nachbar','mein Bruder','mein Lehrer','mein Chef'] },
+      { typ:'wort', frage:'Wo ist das Haus des Nachbarn?', glyph:'بَيْتُهُ قَرِيبٌ مِنْ بَيْتِنَا.',
+        richtig:'nah bei unserem Haus', optionen:['nah bei unserem Haus','weit weg','in der Stadt','im Markt'] },
+      { typ:'dear', frage:'Wie fragst du, ob er eine Familie hat?', glyph:'„Hat er eine Familie?"',
+        richtig:'هَلْ عِنْدَهُ أُسْرَةٌ؟', optionen:['هَلْ عِنْدَهُ أُسْرَةٌ؟','مَنْ هَذَا؟','أَيْنَ بَيْتُهُ؟','هَلْ هُوَ صَدِيقُكَ؟'] }
+    ]},
+  { id:11, titelAr:'كَمِ السَّاعَةُ؟', titel:'Die Uhrzeit', unter:'Nach der Uhrzeit an verschiedenen Orten fragen',
+    zeilen:[
+      { s:'A', ar:'كَمِ السَّاعَةُ الْآنَ؟', tr:'kami s-sāʿatu l-ān?', de:'Wie viel Uhr ist es jetzt?' },
+      { s:'B', ar:'السَّاعَةُ خَمْسَةٌ.', tr:'as-sāʿatu chamsa.', de:'Es ist fünf Uhr.' },
+      { s:'A', ar:'وَفِي الْجَامِعَةِ، كَمِ السَّاعَةُ؟', tr:'wa-fī l-dschāmiʿa, kami s-sāʿa?', de:'Und an der Universität, wie viel Uhr ist es?' },
+      { s:'B', ar:'فِي الْجَامِعَةِ السَّاعَةُ عَشَرَةٌ.', tr:'fī l-dschāmiʿati s-sāʿatu ʿaschara.', de:'An der Universität ist es zehn Uhr.' },
+      { s:'A', ar:'وَفِي الْبَيْتِ؟', tr:'wa-fī l-bait?', de:'Und zuhause?' },
+      { s:'B', ar:'فِي الْبَيْتِ السَّاعَةُ ثَلَاثَةٌ.', tr:'fī l-baiti s-sāʿatu thalātha.', de:'Zuhause ist es drei Uhr.' },
+      { s:'A', ar:'وَفِي الْمَكْتَبَةِ؟', tr:'wa-fī l-maktaba?', de:'Und in der Bibliothek?' },
+      { s:'B', ar:'فِي الْمَكْتَبَةِ السَّاعَةُ سَبْعَةٌ.', tr:'fī l-maktabati s-sāʿatu sabʿa.', de:'In der Bibliothek ist es sieben Uhr.' },
+      { s:'A', ar:'شُكْرًا جَزِيلًا!', tr:'schukran dschazīlan!', de:'Vielen Dank!' },
+      { s:'B', ar:'عَفْوًا! مَعَ السَّلَامَةِ!', tr:'ʿafwan! maʿa s-salāma!', de:'Gern geschehen! Auf Wiedersehen!' }
+    ],
+    fragen:[
+      { typ:'wort', frage:'Wie viel Uhr ist es gerade?', glyph:'السَّاعَةُ خَمْسَةٌ.',
+        richtig:'fünf Uhr', optionen:['fünf Uhr','zehn Uhr','drei Uhr','sieben Uhr'] },
+      { typ:'wort', frage:'Wie viel Uhr ist es an der Universität?', glyph:'فِي الْجَامِعَةِ السَّاعَةُ عَشَرَةٌ.',
+        richtig:'zehn Uhr', optionen:['zehn Uhr','fünf Uhr','drei Uhr','sieben Uhr'] },
+      { typ:'dear', frage:'Wie fragst du, wie viel Uhr es jetzt ist?', glyph:'„Wie viel Uhr ist es jetzt?"',
+        richtig:'كَمِ السَّاعَةُ الْآنَ؟', optionen:['كَمِ السَّاعَةُ الْآنَ؟','أَيْنَ الْجَامِعَةُ؟','هَلْ عِنْدَكَ سَاعَةٌ؟','مَنْ هَذَا؟'] }
     ]}
 ];
 /* ============================================================
@@ -185,7 +271,15 @@ var FUNKTIONSWOERTER = [
   // feste Ausdrücke.
   'لَا','هَلِ','الطَّعَامُ','الْمَائِدَةُ','الطَّبَّاخُ','عِنْدَكُمْ','وَخَضْرَوَاتٌ','عِنْدَنَا','كُلُّ','شَيْءٍ',
   'الْمَسْجِدُ','الْيَمِينِ','الْيَسَارِ','الْمَتْجَرِ','الْمَسْجِدِ','الطَّرِيقُ',
-  'هَاتِفُ','كَرِيمٍ','صَدِيقُكَ','أَهْلًا','الْعَمَلِ','زَمِيلُكَ','الْبَيْتِ'
+  'هَاتِفُ','كَرِيمٍ','صَدِيقُكَ','أَهْلًا','الْعَمَلِ','زَمِيلُكَ','الْبَيْتِ',
+  // AP 2.2 — Markt/Arzt/Nachbar/Uhrzeit: weitere gebundene Formen bereits
+  // bekannter Vokabeln (inkl. der neuen Zahlen-, Arzt- und Nachbar-Vokabeln)
+  // + der bereits in vokabeln.js selbst als Beispielsatz "gesegnete" Ausdruck
+  // „كَمِ السَّاعَةُ (الْآنَ)؟" (Vokabel-ID 212, سَاعَةٌ).
+  'عِنْدَهُمْ','أَيْضًا','السِّعْرُ','كَمِ','السُّوقِ','وَهَذَا',
+  'الطَّبِيبُ','الْمُسْتَشْفَى','لِلطَّبِيبِ',
+  'جَارِي','بَيْتُهُ','بَيْتِنَا','عِنْدَهُ',
+  'الْآنَ','السَّاعَةُ','وَفِي','الْجَامِعَةِ','الْمَكْتَبَةِ'
 ];
 
 // Zerlegt eine Dialogzeile in Wörter (Satzzeichen entfernt).

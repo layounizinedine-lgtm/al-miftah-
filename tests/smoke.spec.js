@@ -44,7 +44,7 @@ test('Module laden, Daten & Init sind vorhanden', async ({ page }) => {
   expect(state.letters).toBe(28);
   expect(state.harakat).toBe(11);
   expect(state.vokabeln).toBeGreaterThan(200);
-  expect(state.themen).toBe(10);
+  expect(state.themen).toBeGreaterThanOrEqual(10);
   expect(state.lettersRendered).toBeTruthy();
   expect(state.pathRendered).toBeTruthy();
   expect(errors).toEqual([]);
@@ -816,9 +816,10 @@ test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bes
     return {
       total: document.querySelectorAll('#kapitel-liste .stop').length,
       offen: document.querySelectorAll('#kapitel-liste .stop-clickable').length,
+      themenAnzahl: VOKAB_THEMEN.length,
     };
   });
-  expect(gate.total).toBe(10); // 10 Themenfelder = 10 Kapitel
+  expect(gate.total).toBe(gate.themenAnzahl); // jedes Themenfeld = ein Kapitel
   expect(gate.offen).toBe(1); // nur Kapitel 1 zu Beginn offen
 
   const k0 = await page.evaluate(() => {
@@ -892,9 +893,9 @@ test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bes
     openThema(1);
     startVokabelExercise();
     await new Promise((r) => setTimeout(r, 300));
-    return { themenCount, opts: document.querySelectorAll('.ex-option').length };
+    return { themenCount, themenAnzahl: VOKAB_THEMEN.length, opts: document.querySelectorAll('.ex-option').length };
   });
-  expect(bib.themenCount).toBe(10);
+  expect(bib.themenCount).toBe(bib.themenAnzahl);
   expect(bib.opts).toBeGreaterThanOrEqual(2);
 
   expect(errors).toEqual([]);
@@ -999,7 +1000,7 @@ test('AP 2.2: 3 neue Dialoge (Restaurant/Moschee/Telefon) — 10-14 Zeilen, Roll
   await page.evaluate(() => document.body.click());
 
   const total = await page.evaluate(() => DIALOGE.length);
-  expect(total).toBe(8); // 5 bestehende + 3 neue
+  expect(total).toBeGreaterThanOrEqual(8); // mindestens 5 bestehende + 3 neue
 
   for (const id of [5, 6, 7]) {
     const result = await page.evaluate(async (dialogId) => {
@@ -1039,6 +1040,79 @@ test('AP 2.2: 3 neue Dialoge (Restaurant/Moschee/Telefon) — 10-14 Zeilen, Roll
     expect(result.richtig).toBe(5);
     expect(result.n).toBe(5);
   }
+
+  expect(errors).toEqual([]);
+});
+
+test('AP 2.2: 4 weitere neue Dialoge (Markt/Arzt/Nachbar/Uhrzeit) + neues Kapitel "Zahlen"', async ({ page }) => {
+  test.setTimeout(80000);
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+  await page.evaluate(() => document.body.click());
+
+  const total = await page.evaluate(() => DIALOGE.length);
+  expect(total).toBe(12); // alle 7 laut Plan geplanten neuen Dialoge + 5 bestehende
+
+  const luecken = await page.evaluate(() => dialogWortAbdeckungLuecken());
+  expect(luecken).toEqual([]);
+
+  for (const id of [8, 9, 10, 11]) {
+    const result = await page.evaluate(async (dialogId) => {
+      go('stufe2');
+      openDialog(dialogId);
+      const zeilenCount = aktuellerDialog.zeilen.length;
+
+      setDialogMode('rollenspiel');
+      const bZeileIdx = aktuellerDialog.zeilen.findIndex((z) => z.s === 'B');
+      const woerter = dialogZeileWoerter(aktuellerDialog.zeilen[bZeileIdx].ar);
+      for (let wi = 0; wi < woerter.length; wi++) {
+        const btn = document.querySelector('.silben-kachel[onclick*="dlgRollenspielTippe(' + bZeileIdx + ',' + wi + ',"]');
+        if (!btn) return { fehler: 'Kachel fehlt' };
+        btn.click();
+      }
+      await new Promise((r) => setTimeout(r, 900));
+      const rollenspielOk = document.querySelectorAll('#dialog-body .dlg-ar').length > 0;
+
+      setDialogMode('lesen');
+      startDialogQuiz();
+      for (let i = 0; i < exam.fragen.length; i++) {
+        const q = exam.fragen[exam.index];
+        if (q.typ === 'kachelsatz') {
+          for (let wi2 = 0; wi2 < q.woerter.length; wi2++) {
+            document.querySelector('.silben-kachel[data-i="' + wi2 + '"]').click();
+          }
+        } else {
+          document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]').click();
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      return { zeilenCount, rollenspielOk, richtig: exam.richtig, n: exam.fragen.length };
+    }, id);
+    expect(result.zeilenCount).toBeGreaterThanOrEqual(10);
+    expect(result.zeilenCount).toBeLessThanOrEqual(14);
+    expect(result.rollenspielOk).toBeTruthy();
+    expect(result.richtig).toBe(5);
+    expect(result.n).toBe(5);
+  }
+
+  // Neues Kapitel "Zahlen" (Vokabel-Erweiterung für Markt/Uhrzeit-Dialoge)
+  const zahlen = await page.evaluate(() => {
+    go('stufe2');
+    const total_ = document.querySelectorAll('#kapitel-liste .stop').length;
+    const zTheme = VOKAB_THEMEN.find((t) => t.name === 'Zahlen');
+    return {
+      totalKapitel: total_,
+      themenAnzahl: VOKAB_THEMEN.length,
+      zahlenVocabCount: zTheme ? zTheme.vocab.length : -1,
+      zahlenLektionen: zTheme ? zTheme.lektionen.length : -1,
+    };
+  });
+  expect(zahlen.totalKapitel).toBe(zahlen.themenAnzahl);
+  expect(zahlen.zahlenVocabCount).toBe(10);
+  expect(zahlen.zahlenLektionen).toBe(2);
 
   expect(errors).toEqual([]);
 });

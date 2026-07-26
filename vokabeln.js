@@ -642,7 +642,8 @@ const VOKABELN_DATA = [
      122,
      127,
      128,
-     136
+     136,
+     550
     ]
    }
   ],
@@ -1822,6 +1823,21 @@ const VOKABELN_DATA = [
        "wortart": "Nomen"
       }
      ]
+    }
+   },
+   {
+    "id": 550,
+    "arabic": "جَارٌ",
+    "translations": {
+     "de": "Nachbar",
+     "en": "neighbor"
+    },
+    "wordType": "Nomen",
+    "plural": "جِيرَانٌ",
+    "exampleArabic": "هَذَا جَارِي.",
+    "exampleTranslation": {
+     "de": "Das ist mein Nachbar.",
+     "en": "This is my neighbor."
     }
    }
   ]
@@ -6299,7 +6315,8 @@ const VOKABELN_DATA = [
      137,
      141,
      158,
-     173
+     173,
+     549
     ]
    }
   ],
@@ -6842,6 +6859,21 @@ const VOKABELN_DATA = [
        "wortart": "Nomen"
       }
      ]
+    }
+   },
+   {
+    "id": 549,
+    "arabic": "طَبِيبٌ",
+    "translations": {
+     "de": "Arzt",
+     "en": "doctor"
+    },
+    "wordType": "Nomen",
+    "plural": "أَطِبَّاءُ",
+    "exampleArabic": "الطَّبِيبُ فِي الْمُسْتَشْفَى.",
+    "exampleTranslation": {
+     "de": "Der Arzt ist im Krankenhaus.",
+     "en": "The doctor is in the hospital."
     }
    }
   ]
@@ -8757,6 +8789,38 @@ const VOKABELN_DATA = [
      ]
     }
    }
+  ]
+ },
+ {
+  "id": 10,
+  "name": "Zahlen",
+  "nameAr": "الْأَرْقَام",
+  "icon": "١٢٣",
+  "lektionen": [
+   { "nr": 1, "vokIds": [539, 540, 541, 542, 543] },
+   { "nr": 2, "vokIds": [544, 545, 546, 547, 548] }
+  ],
+  "vocab": [
+   { "id": 539, "arabic": "وَاحِدٌ", "translations": { "de": "eins", "en": "one" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا وَاحِدٌ.", "exampleTranslation": { "de": "Das ist eins.", "en": "This is one." } },
+   { "id": 540, "arabic": "اِثْنَانِ", "translations": { "de": "zwei", "en": "two" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا اِثْنَانِ.", "exampleTranslation": { "de": "Das ist zwei.", "en": "This is two." } },
+   { "id": 541, "arabic": "ثَلَاثَةٌ", "translations": { "de": "drei", "en": "three" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا ثَلَاثَةٌ.", "exampleTranslation": { "de": "Das ist drei.", "en": "This is three." } },
+   { "id": 542, "arabic": "أَرْبَعَةٌ", "translations": { "de": "vier", "en": "four" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا أَرْبَعَةٌ.", "exampleTranslation": { "de": "Das ist vier.", "en": "This is four." } },
+   { "id": 543, "arabic": "خَمْسَةٌ", "translations": { "de": "fünf", "en": "five" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا خَمْسَةٌ.", "exampleTranslation": { "de": "Das ist fünf.", "en": "This is five." } },
+   { "id": 544, "arabic": "سِتَّةٌ", "translations": { "de": "sechs", "en": "six" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا سِتَّةٌ.", "exampleTranslation": { "de": "Das ist sechs.", "en": "This is six." } },
+   { "id": 545, "arabic": "سَبْعَةٌ", "translations": { "de": "sieben", "en": "seven" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا سَبْعَةٌ.", "exampleTranslation": { "de": "Das ist sieben.", "en": "This is seven." } },
+   { "id": 546, "arabic": "ثَمَانِيَةٌ", "translations": { "de": "acht", "en": "eight" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا ثَمَانِيَةٌ.", "exampleTranslation": { "de": "Das ist acht.", "en": "This is eight." } },
+   { "id": 547, "arabic": "تِسْعَةٌ", "translations": { "de": "neun", "en": "nine" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا تِسْعَةٌ.", "exampleTranslation": { "de": "Das ist neun.", "en": "This is nine." } },
+   { "id": 548, "arabic": "عَشَرَةٌ", "translations": { "de": "zehn", "en": "ten" }, "wordType": "Zahl",
+     "exampleArabic": "هَذَا عَشَرَةٌ.", "exampleTranslation": { "de": "Das ist zehn.", "en": "This is ten." } }
   ]
  }
 ];
