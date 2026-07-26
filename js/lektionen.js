@@ -194,6 +194,15 @@ function renderLektionDetail(){
     html += '<p style="text-align:center; color:rgba(242,232,208,0.7); font-style:italic; padding:1rem;">Diese Lektion wird in einem kommenden Ausbauschritt ergänzt.</p>';
   }
 
+  // AP 1.5: Silbenlesen (L9) und Lesefluss/Schnell-Lesen (L12) — beide
+  // Übungstypen sind bewusst in beiden Lektionen erreichbar.
+  if(l.id === 9 || l.id === 12){
+    html += '<div style="text-align:center; margin:1rem 0 1.5rem; display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap;">' +
+      '<button class="btn-ghost" onclick="startSilbenUebung()">🧩 Silben bauen</button>' +
+      '<button class="btn-ghost" onclick="startSchnellLesen()">⚡ Schnell-Lesen</button>' +
+    '</div>';
+  }
+
   var restMs = lektionCooldownRestMs(l.id);
   var data = loadLektionenState();
   var schwach = (data[l.id] && data[l.id].schwachePunkte) || [];

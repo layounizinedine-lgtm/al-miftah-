@@ -959,6 +959,7 @@ function renderExamQuestion(){
   if(exam.index >= exam.fragen.length){ renderExamDone(); return; }
   var q = exam.fragen[exam.index];
   if(q.typ === 'schreiben'){ renderExamSchreibenFrage(q); return; }
+  if(q.typ === 'silben'){ renderSilbenFrage(q); return; }
   var pct = Math.round((exam.index / exam.fragen.length) * 100);
   var glyphSize = (q.typ === 'wort') ? 'style="font-size:clamp(3.5rem, 16vw, 6rem);"' : '';
   var cols = (q.typ === 'wort') ? 'style="grid-template-columns:1fr;"' : '';
@@ -1140,6 +1141,168 @@ function exSchreibenFertig(){
     exam.lektionFalsch.push(q);
   }
   setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1300);
+}
+
+/* ============================================================
+   SILBEN BAUEN (AP 1.5) — Kacheln in der richtigen Reihenfolge tippen.
+   Eigenständige Übung UND als Fragetyp 'silben' im Exam-Engine-Dispatch
+   (für die Tages-Session).
+   ============================================================ */
+var silbenWoerter = [];
+var silbenIndex = 0;
+var silbenCorrect = 0;
+var silbenAktuelleReihenfolge = [];
+
+function silbenPool(){ return SILBEN_WOERTER.filter(function(w){ return w.silben.length >= 2; }); }
+
+function startSilbenUebung(){
+  exerciseReturnView = 'letters';
+  silbenWoerter = shuffle(silbenPool()).slice(0, 8);
+  silbenIndex = 0; silbenCorrect = 0;
+  go('exercise');
+  renderSilbenFrage();
+}
+
+function silbenFrage(w){ return { typ:'silben', wort:w }; }
+
+function renderSilbenFrage(q){
+  var body = document.getElementById('exercise-body');
+  var w, pct, kopf;
+  if(q){ // eingebettet im Exam-Engine-Dispatch (Tages-Session)
+    w = q.wort; pct = Math.round((exam.index / exam.fragen.length) * 100); kopf = '';
+  } else { // eigenständige Übung
+    if(silbenIndex >= silbenWoerter.length){ renderSilbenDone(); return; }
+    w = silbenWoerter[silbenIndex]; pct = Math.round((silbenIndex / silbenWoerter.length) * 100); kopf = '';
+  }
+  silbenAktuelleReihenfolge = [];
+  var poolReihenfolge = shuffle(w.silben.map(function(_, i){ return i; }));
+
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    kopf +
+    '<div class="ex-question">Baue das Wort für „' + esc(w.de) + '"</div>' +
+    '<button class="ex-play" data-say="' + esc(w.ar) + '" aria-label="Abspielen">▷</button>' +
+    '<div class="silben-antwort" id="silben-antwort" lang="ar" dir="rtl"></div>' +
+    '<div class="silben-pool" id="silben-pool">' +
+      poolReihenfolge.map(function(i){
+        return '<button class="silben-kachel" data-i="' + i + '" onclick="silbenTippe(' + i + ', this, ' + (q ? 'true' : 'false') + ')" lang="ar" dir="rtl">' + esc(w.silben[i]) + '</button>';
+      }).join('') +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
+}
+
+function silbenTippe(i, btn, eingebettet){
+  var w = eingebettet ? exam.fragen[exam.index].wort : silbenWoerter[silbenIndex];
+  var erwartet = silbenAktuelleReihenfolge.length;
+  if(i === erwartet){
+    silbenAktuelleReihenfolge.push(w.silben[i]);
+    btn.classList.add('correct'); btn.disabled = true;
+    document.getElementById('silben-antwort').textContent = silbenAktuelleReihenfolge.join('');
+    if(silbenAktuelleReihenfolge.length === w.silben.length){
+      var fb = document.getElementById('ex-feedback');
+      fb.textContent = 'Richtig ✦ — ' + w.tr; fb.className = 'ex-feedback good';
+      speak(w.ar);
+      if(eingebettet){
+        exam.richtig++;
+        setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1400);
+      } else {
+        silbenCorrect++;
+        setTimeout(function(){ silbenIndex++; renderSilbenFrage(); }, 1400);
+      }
+    }
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
+  }
+}
+
+function renderSilbenDone(){
+  var body = document.getElementById('exercise-body');
+  var msg = (silbenCorrect === silbenWoerter.length) ? 'Makellos zusammengesetzt! ✦' : 'Gut gemacht — Silben werden mit jeder Runde vertrauter.';
+  body.innerHTML =
+    '<div class="ex-done">' +
+      '<div class="star">✦</div>' +
+      '<h2>' + silbenCorrect + ' von ' + silbenWoerter.length + ' richtig</h2>' +
+      '<p>' + msg + '</p>' +
+      '<button class="btn-gold" onclick="startSilbenUebung()">Nochmal üben</button>' +
+      '<div style="margin-top:1rem;"><button class="btn-ghost" onclick="go(\'letters\')">Zurück</button></div>' +
+    '</div>';
+}
+
+/* ============================================================
+   SCHNELL-LESEN (AP 1.5) — Lesefluss mit Zeitbonus.
+   Punkte gelten nur für diese Übungsrunde (kein app-weites XP-System —
+   das ist erst Phase 6 des Masterplans); Tempo motiviert, entscheidet
+   aber nicht über Bestehen.
+   ============================================================ */
+var schnellWoerter = [];
+var schnellIndex = 0;
+var schnellPunkte = 0;
+var schnellStart = 0;
+var schnellRichtigIdx = 0;
+
+function startSchnellLesen(){
+  exerciseReturnView = 'letters';
+  schnellWoerter = shuffle(ALLE_WOERTER.concat(SILBEN_WOERTER)).slice(0, 10);
+  schnellIndex = 0; schnellPunkte = 0;
+  go('exercise');
+  renderSchnellFrage();
+}
+
+function renderSchnellFrage(){
+  var body = document.getElementById('exercise-body');
+  if(schnellIndex >= schnellWoerter.length){ renderSchnellDone(); return; }
+  var w = schnellWoerter[schnellIndex];
+  var optionen = shuffle([w.tr].concat(w.falsch));
+  schnellRichtigIdx = optionen.indexOf(w.tr);
+  schnellStart = Date.now();
+  var pct = Math.round((schnellIndex / schnellWoerter.length) * 100);
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="ex-question">Schnell gelesen? · Punkte: ' + schnellPunkte + '</div>' +
+    '<div class="ex-glyph" style="font-size:clamp(3.5rem, 16vw, 6rem);" lang="ar" dir="rtl">' + esc(w.ar) + '</div>' +
+    '<div class="ex-options" style="grid-template-columns:1fr 1fr;">' +
+      optionen.map(function(o, idx){
+        return '<button class="ex-option" data-idx="' + idx + '" onclick="schnellAntwort(this)">' + esc(o) + '</button>';
+      }).join('') +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
+}
+
+function schnellAntwort(btn){
+  var w = schnellWoerter[schnellIndex];
+  var buttons = document.querySelectorAll('.ex-option');
+  for(var i=0;i<buttons.length;i++){ buttons[i].disabled = true; }
+  var isRight = (parseInt(btn.getAttribute('data-idx'), 10) === schnellRichtigIdx);
+  var elapsedSec = (Date.now() - schnellStart) / 1000;
+  var fb = document.getElementById('ex-feedback');
+
+  if(isRight){
+    btn.classList.add('correct');
+    var bonus = elapsedSec <= 3 ? 2 : 1;
+    schnellPunkte += bonus;
+    fb.textContent = 'Richtig ✦ +' + bonus + ' Punkte (' + elapsedSec.toFixed(1) + 's)';
+    fb.className = 'ex-feedback good';
+  } else {
+    if(buttons[schnellRichtigIdx]) buttons[schnellRichtigIdx].classList.add('correct');
+    btn.classList.add('wrong');
+    fb.textContent = 'Es heißt „' + w.tr + '"';
+    fb.className = 'ex-feedback bad';
+  }
+  speak(w.ar);
+  setTimeout(function(){ schnellIndex++; renderSchnellFrage(); }, 1300);
+}
+
+function renderSchnellDone(){
+  var body = document.getElementById('exercise-body');
+  body.innerHTML =
+    '<div class="ex-done">' +
+      '<div class="star">✦</div>' +
+      '<h2>' + schnellPunkte + ' Punkte gesammelt</h2>' +
+      '<p>Tempo motiviert — für deinen Fortschritt zählt trotzdem vor allem, dass du liest.</p>' +
+      '<button class="btn-gold" onclick="startSchnellLesen()">Nochmal üben</button>' +
+      '<div style="margin-top:1rem;"><button class="btn-ghost" onclick="go(\'letters\')">Zurück</button></div>' +
+    '</div>';
 }
 
 function renderExamDone(){

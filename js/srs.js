@@ -69,7 +69,13 @@ function buildDailySession(){
   var fresh = srsNew(5);
   var deck = shuffle(due.concat(fresh)).slice(0, 12);
   if(deck.length === 0){ deck = shuffle(alleSrsItems()).slice(0, 8); }
-  return deck.map(itemZuFrage);
+  var fragen = deck.map(itemZuFrage);
+  // AP 1.5: ein Silben-bauen-Element für Lesefluss-Wiederholung, wenn Wortmaterial vorhanden ist.
+  if(typeof silbenPool === 'function' && typeof silbenFrage === 'function'){
+    var pool = silbenPool();
+    if(pool.length){ fragen.push(silbenFrage(pool[Math.floor(Math.random() * pool.length)])); }
+  }
+  return shuffle(fragen);
 }
 
 function updateDaily(){

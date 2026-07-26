@@ -646,3 +646,153 @@ test('Stufenprüfung 2.0: Bestehen schaltet Stufe 2 frei, Fehlversuch setzt 30-M
   expect(guard).toBe(false);
   expect(errors).toEqual([]);
 });
+
+test('AP 1.5: SILBEN_WOERTER-Daten sind intakt (Silben ergeben exakt das Wort, keine doppelten/falschen Distraktoren)', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const check = await page.evaluate(() => {
+    var bad = [];
+    SILBEN_WOERTER.forEach(function (w) {
+      if (w.silben.join('') !== w.ar) bad.push('concat-mismatch: ' + w.ar);
+      var falschSet = {};
+      w.falsch.forEach(function (f) {
+        if (falschSet[f]) bad.push('duplicate-distraktor: ' + w.ar);
+        falschSet[f] = true;
+        if (f === w.tr) bad.push('distraktor-equals-correct: ' + w.ar);
+      });
+    });
+    return { total: SILBEN_WOERTER.length, mehrsilbig: silbenPool().length, bad: bad };
+  });
+  expect(check.bad).toEqual([]);
+  expect(check.total).toBeGreaterThanOrEqual(40);
+  expect(check.mehrsilbig).toBeGreaterThan(0);
+  expect(errors).toEqual([]);
+});
+
+test('AP 1.5: Silben bauen — falsche Reihenfolge wird abgelehnt, richtige Reihenfolge schließt ab', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const result = await page.evaluate(async () => {
+    var w = silbenPool().find(function (x) { return x.silben.length === 3; }) || silbenPool()[0];
+    silbenWoerter = [w];
+    silbenIndex = 0; silbenCorrect = 0;
+    exerciseReturnView = 'letters';
+    go('exercise');
+    renderSilbenFrage();
+    await new Promise(function (r) { setTimeout(r, 50); });
+
+    var kacheln = Array.prototype.slice.call(document.querySelectorAll('.silben-kachel'));
+    var order = kacheln.map(function (el) { return parseInt(el.getAttribute('data-i'), 10); });
+
+    // falscher Versuch: klicke ein Element, das NICHT das nächste erwartete ist (falls vorhanden)
+    var wrongIdx = order.find(function (i) { return i !== 0; });
+    var rejected = true;
+    if (wrongIdx !== undefined) {
+      var wrongBtn = kacheln.find(function (el) { return parseInt(el.getAttribute('data-i'), 10) === wrongIdx; });
+      wrongBtn.click();
+      rejected = silbenAktuelleReihenfolge.length === 0;
+    }
+
+    // richtige Reihenfolge: 0..n-1 in genau dieser Reihenfolge antippen
+    for (var i = 0; i < w.silben.length; i++) {
+      var btn = kacheln.find(function (el) { return parseInt(el.getAttribute('data-i'), 10) === i; });
+      btn.click();
+    }
+    await new Promise(function (r) { setTimeout(r, 50); });
+    return { rejected: rejected, done: silbenAktuelleReihenfolge.length === w.silben.length, silbenLen: w.silben.length };
+  });
+  expect(result.rejected).toBeTruthy();
+  expect(result.done).toBeTruthy();
+  expect(errors).toEqual([]);
+});
+
+test('AP 1.5: Schnell-Lesen — Zeitbonus (schnell=+2, langsam=+1) und Session-Punkte', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const result = await page.evaluate(async () => {
+    startSchnellLesen();
+    await new Promise(function (r) { setTimeout(r, 50); });
+    // schnelle korrekte Antwort simulieren
+    schnellStart = Date.now() - 500; // 0.5s "verstrichen"
+    var richtigBtn = document.querySelector('.ex-option[data-idx="' + schnellRichtigIdx + '"]');
+    var punkteVorher = schnellPunkte;
+    richtigBtn.click();
+    await new Promise(function (r) { setTimeout(r, 1500); }); // Auto-Advance zur nächsten Frage abwarten
+    var bonusSchnell = schnellPunkte - punkteVorher;
+
+    // langsame korrekte Antwort simulieren
+    schnellStart = Date.now() - 4000; // 4s "verstrichen"
+    var richtigBtn2 = document.querySelector('.ex-option[data-idx="' + schnellRichtigIdx + '"]');
+    var punkteVorher2 = schnellPunkte;
+    if (richtigBtn2) richtigBtn2.click();
+    await new Promise(function (r) { setTimeout(r, 50); });
+    var bonusLangsam = schnellPunkte - punkteVorher2;
+
+    return { bonusSchnell: bonusSchnell, bonusLangsam: bonusLangsam };
+  });
+  expect(result.bonusSchnell).toBe(2);
+  expect(result.bonusLangsam).toBe(1);
+  expect(errors).toEqual([]);
+});
+
+test('AP 1.5: Tages-Session enthält genau eine Silben-Frage', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const silbenCount = await page.evaluate(() => {
+    var session = buildDailySession();
+    return session.filter(function (q) { return q.typ === 'silben'; }).length;
+  });
+  expect(silbenCount).toBe(1);
+  expect(errors).toEqual([]);
+});
+
+test('AP 1.5: L9 und L12 zeigen "Silben bauen" und "Schnell-Lesen" Buttons, die die Übungen starten', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const setup = await page.evaluate(() => {
+    var st = loadLektionenState();
+    for (var i = 1; i <= 11; i++) { st[i] = st[i] || {}; st[i].passed = true; }
+    saveLektionenState(st);
+    return true;
+  });
+  expect(setup).toBeTruthy();
+
+  for (const id of [9, 12]) {
+    const html = await page.evaluate((lid) => { openLektion(lid); return document.getElementById('lektion-inhalt').innerHTML; }, id);
+    expect(html).toContain('startSilbenUebung');
+    expect(html).toContain('startSchnellLesen');
+  }
+
+  // Silben bauen von L9 aus startet die Übung
+  await page.evaluate(() => { openLektion(9); });
+  const silbenBtn = await page.locator('button:has-text("Silben bauen")').first();
+  await silbenBtn.click();
+  await page.waitForTimeout(150);
+  const silbenLaunched = await page.evaluate(() => !!document.getElementById('silben-antwort'));
+  expect(silbenLaunched).toBeTruthy();
+
+  // Schnell-Lesen von L12 aus startet die Übung
+  await page.evaluate(() => { go('letters'); openLektion(12); });
+  const schnellBtn = await page.locator('button:has-text("Schnell-Lesen")').first();
+  await schnellBtn.click();
+  await page.waitForTimeout(150);
+  const schnellLaunched = await page.evaluate(() => typeof schnellStart === 'number' && schnellStart > 0);
+  expect(schnellLaunched).toBeTruthy();
+
+  expect(errors).toEqual([]);
+});

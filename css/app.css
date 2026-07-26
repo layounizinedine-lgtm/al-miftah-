@@ -290,6 +290,23 @@
   .ex-feedback.good{ color:#5fce8a; }
   .ex-feedback.bad{ color: var(--red-soft); }
 
+  /* ---------- SILBEN BAUEN (AP 1.5) ---------- */
+  .silben-antwort{
+    min-height: 3.2rem; display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:2.2rem; color:#fdf8ec;
+    border-bottom: 2px solid rgba(201,162,39,0.4); margin: 1.2rem auto 1.6rem; max-width:22rem;
+  }
+  .silben-pool{ display:flex; gap:.6rem; justify-content:center; flex-wrap:wrap; }
+  .silben-kachel{
+    font-family:'Noto Naskh Arabic', serif; font-weight:700; font-size:1.5rem; color:#fdf8ec;
+    background: linear-gradient(160deg, rgba(15,61,61,0.9), rgba(10,43,43,0.9));
+    border:1px solid rgba(201,162,39,0.35); border-radius:8px; padding:.7rem 1rem;
+    transition: transform .12s ease, border-color .15s ease;
+  }
+  .silben-kachel:hover{ border-color: var(--gold-bright); transform: translateY(-2px); }
+  .silben-kachel.correct{ opacity:.35; pointer-events:none; }
+  .silben-kachel.wrong{ border-color: var(--red-soft); background: linear-gradient(160deg, #5c2020, #431717); }
+
   .ex-done{ text-align:center; padding: 3rem 1.5rem; }
   .ex-done .star{ font-size:3rem; color: var(--gold-bright); }
   .ex-done h2{ font-family:'Cormorant Garamond', serif; font-weight:600; color: var(--gold-bright); font-size:1.8rem; margin:.5rem 0; }
