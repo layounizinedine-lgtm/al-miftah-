@@ -958,6 +958,7 @@ function renderExamQuestion(){
   var body = document.getElementById('exercise-body');
   if(exam.index >= exam.fragen.length){ renderExamDone(); return; }
   var q = exam.fragen[exam.index];
+  if(q.typ === 'schreiben'){ renderExamSchreibenFrage(q); return; }
   var pct = Math.round((exam.index / exam.fragen.length) * 100);
   var glyphSize = (q.typ === 'wort') ? 'style="font-size:clamp(3.5rem, 16vw, 6rem);"' : '';
   var cols = (q.typ === 'wort') ? 'style="grid-template-columns:1fr;"' : '';
@@ -1018,6 +1019,126 @@ function examAnswer(btn){
     exam.lektionFalsch.push(q);
   }
   if(q.audio){ speak(q.audio); }
+  setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1300);
+}
+
+/* ============================================================
+   SCHREIBEN-FRAGE im Lektions-Check (AP 1.4, ab Lektion 2)
+   Eigene, schlanke Canvas-Instanz — unabhängig vom großen
+   Schreibtrainer (writing.js), gleiche Flächen-Präzision wie dort.
+   Bestehen ab 70%.
+   ============================================================ */
+var EX_WSIZE = 220;
+var exWriteCtx = null, exWriteDrawing = false, exWriteLast = null;
+var exWriteMaskFlag = null, exWriteMaskTotal = 0;
+
+function schreibFrage(ch){
+  return { typ:'schreiben', frage:'Schreibe diesen Buchstaben nach', ch:ch, richtig:ch, srsKey:ch };
+}
+
+function renderExamSchreibenFrage(q){
+  var body = document.getElementById('exercise-body');
+  var pct = Math.round((exam.index / exam.fragen.length) * 100);
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="ex-question">Schreibe diesen Buchstaben nach</div>' +
+    '<div class="detail-glyph" style="font-size:2.4rem;" lang="ar" dir="rtl">' + esc(q.ch) + '</div>' +
+    '<div class="write-stage" style="width:' + EX_WSIZE + 'px; height:' + EX_WSIZE + 'px; margin:0 auto 1rem;">' +
+      '<canvas id="ex-write-back" width="' + EX_WSIZE + '" height="' + EX_WSIZE + '"></canvas>' +
+      '<canvas id="ex-write-front" width="' + EX_WSIZE + '" height="' + EX_WSIZE + '"></canvas>' +
+    '</div>' +
+    '<div style="display:flex; gap:.6rem; justify-content:center;">' +
+      '<button class="btn-ghost" onclick="exSchreibenLoeschen()">↺ Löschen</button>' +
+      '<button class="btn-gold" id="ex-schreiben-fertig" onclick="exSchreibenFertig()">Fertig</button>' +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
+  exSchreibenSetup(q.ch);
+}
+
+function exSchreibenSetup(ch){
+  var back = document.getElementById('ex-write-back');
+  var front = document.getElementById('ex-write-front');
+  var backCtx = back.getContext('2d');
+  exWriteCtx = front.getContext('2d');
+  var fontSize = Math.round(EX_WSIZE * 0.75);
+
+  backCtx.fillStyle = 'rgba(224,187,69,0.18)';
+  backCtx.font = 'bold ' + fontSize + 'px "Noto Naskh Arabic", serif';
+  backCtx.textAlign = 'center'; backCtx.textBaseline = 'middle';
+  backCtx.fillText(ch, EX_WSIZE/2, EX_WSIZE/2 + 6);
+
+  var m = document.createElement('canvas'); m.width = EX_WSIZE; m.height = EX_WSIZE;
+  var mc = m.getContext('2d');
+  mc.fillStyle = '#fff';
+  mc.font = 'bold ' + fontSize + 'px "Noto Naskh Arabic", serif';
+  mc.textAlign = 'center'; mc.textBaseline = 'middle';
+  mc.fillText(ch, EX_WSIZE/2, EX_WSIZE/2 + 6);
+  var data = mc.getImageData(0,0,EX_WSIZE,EX_WSIZE).data;
+  exWriteMaskFlag = new Uint8Array(EX_WSIZE*EX_WSIZE);
+  var maskCount = 0;
+  for(var y=0;y<EX_WSIZE;y+=2){
+    for(var x=0;x<EX_WSIZE;x+=2){
+      var i = (y*EX_WSIZE+x)*4;
+      if(data[i+3] > 80){ exWriteMaskFlag[y*EX_WSIZE+x] = 1; maskCount++; }
+    }
+  }
+  exWriteMaskTotal = maskCount;
+
+  front.addEventListener('pointerdown', exWDown);
+  front.addEventListener('pointermove', exWMove);
+  window.addEventListener('pointerup', exWUp);
+  front.addEventListener('touchstart', function(e){ e.preventDefault(); exWDown(tPos(e)); }, {passive:false});
+  front.addEventListener('touchmove',  function(e){ e.preventDefault(); exWMove(tPos(e)); }, {passive:false});
+  front.addEventListener('touchend',   function(e){ e.preventDefault(); exWUp(); }, {passive:false});
+}
+
+function exWPos(e){
+  var front = document.getElementById('ex-write-front');
+  var rect = front.getBoundingClientRect();
+  var sx = front.width / rect.width, sy = front.height / rect.height;
+  return { x:(e.clientX-rect.left)*sx, y:(e.clientY-rect.top)*sy };
+}
+function exWDown(e){ if(e.preventDefault) e.preventDefault(); exWriteDrawing = true; exWriteLast = exWPos(e); exWDot(exWriteLast); }
+function exWMove(e){ if(!exWriteDrawing) return; if(e.preventDefault) e.preventDefault(); var p = exWPos(e); exWStroke(exWriteLast, p); exWriteLast = p; }
+function exWUp(){ exWriteDrawing = false; }
+function exWDot(p){ exWriteCtx.fillStyle = '#e0bb45'; exWriteCtx.beginPath(); exWriteCtx.arc(p.x, p.y, 7, 0, Math.PI*2); exWriteCtx.fill(); }
+function exWStroke(a, b){
+  exWriteCtx.strokeStyle = '#e0bb45'; exWriteCtx.lineWidth = 13; exWriteCtx.lineCap = 'round'; exWriteCtx.lineJoin = 'round';
+  exWriteCtx.beginPath(); exWriteCtx.moveTo(a.x, a.y); exWriteCtx.lineTo(b.x, b.y); exWriteCtx.stroke();
+}
+function exSchreibenLoeschen(){ exWriteCtx.clearRect(0,0,EX_WSIZE,EX_WSIZE); }
+
+function exSchreibenFertig(){
+  var q = exam.fragen[exam.index];
+  var data = exWriteCtx.getImageData(0,0,EX_WSIZE,EX_WSIZE).data;
+  var paintedTotal = 0, paintedInMask = 0;
+  for(var y=0;y<EX_WSIZE;y+=2){
+    for(var x=0;x<EX_WSIZE;x+=2){
+      var mi = y*EX_WSIZE+x;
+      if(data[mi*4+3] > 0){ paintedTotal++; if(exWriteMaskFlag[mi]) paintedInMask++; }
+    }
+  }
+  var hitRatio = exWriteMaskTotal ? paintedInMask / exWriteMaskTotal : 0;
+  var strayRatio = paintedTotal > 0 ? (paintedTotal - paintedInMask) / paintedTotal : 0;
+  // Gleiche Erfolgsschwelle wie im Haupt-Schreibtrainer (AP 0.1/1.2), dort
+  // bereits kalibriert und geprüft: eine subtraktive Kombi-Formel mit festem
+  // 70%-Cutoff erwies sich als unerreichbar (selbst perfektes Nachfahren des
+  // Skelettpfads erreicht wegen fester Stiftbreite vs. variabler Glyphenbreite
+  // nur ~60-70% Flächentreffer). hitRatio>=60% UND strayRatio<=25% trennt
+  // gutes Nachzeichnen zuverlässig von Kritzeln (das >90% Streuung erzeugt).
+  var isRight = (hitRatio >= 0.60 && strayRatio <= 0.25);
+  var anzeige = Math.round(hitRatio * 100);
+
+  document.getElementById('ex-schreiben-fertig').disabled = true;
+  var fb = document.getElementById('ex-feedback');
+  if(isRight){ fb.textContent = 'Gut getroffen ✦ (' + anzeige + '%)'; fb.className = 'ex-feedback good'; exam.richtig++; }
+  else { fb.textContent = 'Übe die Form noch — (' + anzeige + '%)'; fb.className = 'ex-feedback bad'; }
+
+  if(q.srsKey){ srsGrade(q.srsKey, isRight); }
+  if(exam.mode === 'lektion' && !isRight){
+    if(!exam.lektionFalsch) exam.lektionFalsch = [];
+    exam.lektionFalsch.push(q);
+  }
   setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1300);
 }
 

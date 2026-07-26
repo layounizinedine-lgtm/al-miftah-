@@ -359,16 +359,24 @@
         <div class="write-hint">Fahre mit dem Finger über die blasse Vorlage.</div>
       </div>
 
+      <div class="write-modes" role="tablist" aria-label="Übungsmodus">
+        <button class="write-mode-btn active" id="mode-nachfahren" role="tab" aria-selected="true" onclick="writeSetMode('nachfahren')">✎ Nachfahren</button>
+        <button class="write-mode-btn" id="mode-vormachen" role="tab" aria-selected="false" onclick="writeSetMode('vormachen')">▷ Vormachen</button>
+        <button class="write-mode-btn" id="mode-frei" role="tab" aria-selected="false" onclick="writeSetMode('frei')">✍ Frei</button>
+      </div>
+      <div class="write-stroke-info" id="write-stroke-info"></div>
+
       <div class="write-stage">
         <canvas id="write-back" width="320" height="320"></canvas>
         <canvas id="write-front" width="320" height="320"></canvas>
       </div>
 
       <div class="write-meter"><div class="write-meter-bar" id="write-meter-bar"></div></div>
-      <div class="write-meter-label">Nachgezeichnet</div>
+      <div class="write-meter-label">Fortschritt</div>
       <div class="write-feedback" id="write-feedback" role="status" aria-live="polite">·</div>
 
       <div class="write-controls">
+        <button class="btn-ghost" id="write-vormachen-btn" onclick="writeVormachenAbspielen()" style="display:none;">▷ Abspielen</button>
         <button class="btn-ghost" onclick="writeClear()">↺ Löschen</button>
         <button class="btn-ghost" onclick="writeListen()">▷ Anhören</button>
       </div>
@@ -436,6 +444,7 @@
 <script defer src="js/srs.js"></script>
 <script defer src="js/exercises.js"></script>
 <script defer src="js/lektionen.js"></script>
+<script defer src="js/stroke-extract.js"></script>
 <script defer src="js/writing.js"></script>
 <script defer src="js/auth-sync.js"></script>
 <script defer src="js/main.js"></script>

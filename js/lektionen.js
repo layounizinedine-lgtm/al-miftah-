@@ -293,7 +293,9 @@ function buildLektionReviewPoolBuchstaben(lek){
 }
 
 function buildLektionFragenBuchstaben(lek){
-  var n = 10;
+  // Ab Lektion 2 belegt eine Schreibaufgabe (AP 1.4) einen der 10 Plätze.
+  var hatSchreibaufgabe = lek.id >= 2;
+  var n = hatSchreibaufgabe ? 9 : 10;
   var reviewVerfuegbar = alleBisherigenBuchstaben(lek.id).length > 0;
   var reviewCount = reviewVerfuegbar ? 3 : 0; // ~30% Altstoff, sobald welcher besteht
   var neuCount = n - reviewCount;
@@ -315,7 +317,12 @@ function buildLektionFragenBuchstaben(lek){
   if(reviewCount){
     reviewAuswahl = shuffle(buildLektionReviewPoolBuchstaben(lek)).slice(0, reviewCount);
   }
-  return shuffle(pflicht.concat(rest, reviewAuswahl)).slice(0, n);
+  var fragen = shuffle(pflicht.concat(rest, reviewAuswahl)).slice(0, n);
+  if(hatSchreibaufgabe){
+    var schreibCh = lek.letters[Math.floor(Math.random() * lek.letters.length)];
+    fragen.push(schreibFrage(schreibCh));
+  }
+  return shuffle(fragen);
 }
 
 // Sub-Typ eines buildHaQuestion()-Ergebnisses am Muster der richtigen Antwort erkennen

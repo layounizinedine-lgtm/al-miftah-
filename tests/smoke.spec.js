@@ -408,7 +408,7 @@ test('Fehlversuch: Cooldown übersteht Reload, gescheiterte Buchstaben in SRS-Bo
   expect(errors).toEqual([]);
 });
 
-test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ page }) => {
+test('Schreibtrainer 2.0: Vollkritzeln bleibt bei 0%, Anti-Schmier greift trotz Pfad-Tracing', async ({ page }) => {
   const errors = [];
   await harden(page, errors);
   await page.goto(APP);
@@ -419,11 +419,142 @@ test('Schreibtrainer: Vollkritzeln gibt niedrigen Präzisions-Score', async ({ p
     await new Promise(r => setTimeout(r, 500));
     fctx.fillStyle = '#e0bb45';
     fctx.fillRect(0, 0, WSIZE, WSIZE);
-    updateCoverage();
     return parseInt(document.getElementById('write-meter-bar').style.width, 10);
   });
-
   expect(score).toBeLessThan(60);
+
+  // Auch wenn zusätzlich exakt der Referenzpfad nachgefahren wird, darf die
+  // großflächige Verschmutzung den Erfolg nicht durchrutschen lassen
+  // (zweite Verteidigungslinie aus AP 0.1/1.2).
+  const trotzPfad = await page.evaluate(() => {
+    var stroke = writeStrokes[0];
+    writeDrawing = true;
+    stroke.punkte.forEach(function(p){ wTraceCheck(p); });
+    writeDrawing = false;
+    wNachfahrenStrokeEnde();
+    return { strokeIdx: writeStrokeIdx, feedback: document.getElementById('write-feedback').textContent };
+  });
+  expect(trotzPfad.strokeIdx).toBe(0);
+  expect(errors).toEqual([]);
+});
+
+test('Schreibtrainer 2.0: Vorwärts-Nachfahren schließt Strich ab, rückwärts nicht', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  async function frisch(ch){
+    await page.evaluate((ch) => openWriting(ch), ch);
+    await page.waitForTimeout(300);
+    await page.evaluate(() => writeSetMode('nachfahren'));
+  }
+
+  await frisch('د'); // 1 Strich, keine Punkte — einfachster Fall
+  const vorwaerts = await page.evaluate(() => {
+    var stroke = writeStrokes[0];
+    writeDrawing = true;
+    stroke.punkte.forEach(function(p){ wTraceCheck(p); });
+    writeDrawing = false;
+    wNachfahrenStrokeEnde();
+    return writeStrokeIdx;
+  });
+  expect(vorwaerts).toBe(1); // Strich abgeschlossen, Buchstabe fertig
+
+  await frisch('د');
+  const rueckwaerts = await page.evaluate(() => {
+    var stroke = writeStrokes[0];
+    var rev = stroke.punkte.slice().reverse();
+    writeDrawing = true;
+    rev.forEach(function(p){ wTraceCheck(p); });
+    writeDrawing = false;
+    wNachfahrenStrokeEnde();
+    return writeStrokeIdx;
+  });
+  expect(rueckwaerts).toBe(0); // rückwärts zählt nicht
+
+  expect(errors).toEqual([]);
+});
+
+test('Schreibtrainer 2.0: Strichpfade für alle 28 Buchstaben korrekt (Punktanzahl stimmt)', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  // Bekannte Punktanzahl je Buchstabe (arabische Orthographie) — harte,
+  // objektive Kontrolle der algorithmischen Strichpfad-Extraktion.
+  const erwarteteDots = {
+    'ا':0,'ب':1,'ت':2,'ث':3,'ج':1,'ح':0,'خ':1,'د':0,'ذ':1,'ر':0,'ز':1,'س':0,
+    'ش':3,'ص':0,'ض':1,'ط':0,'ظ':1,'ع':0,'غ':1,'ف':1,'ق':2,'ك':0,'ل':0,'م':0,
+    'ن':1,'ه':0,'و':0,'ي':2
+  };
+  const result = await page.evaluate((erwartete) => {
+    var falsch = [];
+    Object.keys(erwartete).forEach(function(ch){
+      var strokes = extractLetterStrokes(ch);
+      var dots = strokes.filter(function(s){ return s.typ === 'punkt'; }).length;
+      var leer = strokes.some(function(s){ return s.punkte.length === 0; });
+      if(dots !== erwartete[ch] || leer) falsch.push(ch + ':' + dots + '(erwartet ' + erwartete[ch] + ')');
+    });
+    return falsch;
+  }, erwarteteDots);
+  expect(result).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('Schreibaufgabe im Lektions-Check (ab L2): korrekt bestanden, Kritzeln nicht', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(400);
+
+  const struktur = await page.evaluate(() => {
+    var l1 = buildLektionFragenBuchstaben(lektionData(1));
+    var l2 = buildLektionFragenBuchstaben(lektionData(2));
+    return {
+      l1n: l1.length, l1schreiben: l1.filter(function(q){ return q.typ==='schreiben'; }).length,
+      l2n: l2.length, l2schreiben: l2.filter(function(q){ return q.typ==='schreiben'; }).length
+    };
+  });
+  expect(struktur).toEqual({ l1n: 10, l1schreiben: 0, l2n: 10, l2schreiben: 1 });
+
+  await page.evaluate(() => {
+    document.body.click();
+    exam.fragen = [schreibFrage('د')];
+    exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'lektion'; exam.lektionId = 2; exam.lektionFalsch = [];
+    go('exercise');
+    renderExamQuestion();
+  });
+  const gut = await page.evaluate(() => {
+    var scale = EX_WSIZE / 320;
+    extractLetterStrokes('د').forEach(function(s){
+      s.punkte.forEach(function(p, i){
+        var sp = { x: p.x*scale, y: p.y*scale };
+        if(i===0){ exWriteLast = sp; exWDot(sp); } else { exWStroke(exWriteLast, sp); exWriteLast = sp; }
+      });
+    });
+    exSchreibenFertig();
+    return document.getElementById('ex-feedback').className;
+  });
+  expect(gut).toContain('good');
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => exam.richtig)).toBe(1);
+
+  await page.evaluate(() => {
+    exam.fragen = [schreibFrage('د')]; exam.index = 0; exam.richtig = 0; exam.lektionFalsch = [];
+    renderExamQuestion();
+  });
+  const schlecht = await page.evaluate(() => {
+    exWriteCtx.fillStyle = '#e0bb45';
+    exWriteCtx.fillRect(0, 0, EX_WSIZE, EX_WSIZE);
+    exSchreibenFertig();
+    return document.getElementById('ex-feedback').className;
+  });
+  expect(schlecht).toContain('bad');
+  await page.waitForTimeout(1500);
+  expect(await page.evaluate(() => exam.richtig)).toBe(0);
+
   expect(errors).toEqual([]);
 });
 
