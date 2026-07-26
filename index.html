@@ -405,6 +405,12 @@
       <p id="dialog-unter">—</p>
     </div>
 
+    <div style="text-align:center; margin:0 auto 1rem; display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap;">
+      <button class="btn-ghost dlg-mode-btn" id="dlg-mode-lesen" onclick="setDialogMode('lesen')">📖 Lesen</button>
+      <button class="btn-ghost dlg-mode-btn" id="dlg-mode-hoeren" onclick="setDialogMode('hoeren')">👂 Hören</button>
+      <button class="btn-ghost dlg-mode-btn" id="dlg-mode-rollenspiel" onclick="setDialogMode('rollenspiel')">🎭 Rollenspiel</button>
+    </div>
+
     <div class="dlg-wrap" id="dialog-body"><!-- filled by JS --></div>
 
     <footer class="footer">

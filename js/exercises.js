@@ -750,6 +750,17 @@ function findDialog(id){
   return null;
 }
 
+/* ============================================================
+   DIALOG-MODI (AP 2.2): Lesen (Standard) · Hören (verdeckt,
+   zeilenweise aufdecken) · Rollenspiel (Person 1 spricht die App,
+   Person 2 wird aus Wort-Kacheln in der richtigen Reihenfolge
+   gebaut — gleiches Tipp-Prinzip wie „Silben bauen", AP 1.5).
+   ============================================================ */
+var dialogMode = 'lesen';
+var dialogHoerenAufgedeckt = {};
+var dialogRollenspielOrder = {};
+var dialogRollenspielShuffle = {};
+
 function openDialog(id){
   var d = findDialog(id);
   if(!d) return;
@@ -757,7 +768,45 @@ function openDialog(id){
   document.getElementById('dialog-titel-ar').textContent = d.titelAr;
   document.getElementById('dialog-head').textContent = d.titel;
   document.getElementById('dialog-unter').textContent = d.unter;
+  dialogMode = 'lesen';
+  dialogHoerenAufgedeckt = {};
+  dialogRollenspielOrder = {};
+  dialogRollenspielShuffle = {};
+  updateDialogModeButtons();
+  renderDialogBody();
+  go('dialog');
+}
 
+function setDialogMode(mode){
+  dialogMode = mode;
+  dialogHoerenAufgedeckt = {};
+  dialogRollenspielOrder = {};
+  dialogRollenspielShuffle = {};
+  updateDialogModeButtons();
+  renderDialogBody();
+}
+
+function updateDialogModeButtons(){
+  ['lesen', 'hoeren', 'rollenspiel'].forEach(function(m){
+    var btn = document.getElementById('dlg-mode-' + m);
+    if(btn) btn.classList.toggle('active', m === dialogMode);
+  });
+}
+
+function renderDialogBody(){
+  if(dialogMode === 'hoeren'){ renderDialogHoeren(); return; }
+  if(dialogMode === 'rollenspiel'){ renderDialogRollenspiel(); return; }
+  renderDialogLesen();
+}
+
+function dialogQuizTrailerHtml(){
+  return '<div style="text-align:center; margin-top:1.2rem;">' +
+    '<button class="btn-gold" onclick="startDialogQuiz()">Verstanden? → Quiz starten</button>' +
+  '</div>';
+}
+
+function renderDialogLesen(){
+  var d = aktuellerDialog;
   var body = document.getElementById('dialog-body');
   body.classList.remove('hide-help');
   var html = '<div class="dlg-intro">Lies laut mit — tippe ▷, um jeden Satz zu hören.</div>';
@@ -777,11 +826,100 @@ function openDialog(id){
     '<button class="btn-ghost" onclick="dialogAlleAnhoeren()">▷ Ganzes Gespräch anhören</button>' +
     '<button class="btn-ghost" id="dlg-help-btn" onclick="toggleDialogHilfe()">Übersetzung ausblenden</button>' +
   '</div>' +
-  '<div style="text-align:center; margin-top:1.2rem;">' +
-    '<button class="btn-gold" onclick="startDialogQuiz()">Verstanden? → Quiz starten</button>' +
-  '</div>';
+  dialogQuizTrailerHtml();
   body.innerHTML = html;
-  go('dialog');
+}
+
+function renderDialogHoeren(){
+  var d = aktuellerDialog;
+  var body = document.getElementById('dialog-body');
+  var html = '<div class="dlg-intro">Höre zuerst, lies danach — tippe ▷, um jede Zeile aufzudecken.</div>';
+  html += d.zeilen.map(function(z, i){
+    var seite = (z.s === 'A') ? '' : ' b';
+    var aufgedeckt = !!dialogHoerenAufgedeckt[i];
+    var inhalt = aufgedeckt
+      ? '<div class="dlg-ar">' + esc(z.ar) + '</div><div class="dlg-tr">' + esc(z.tr) + '</div><div class="dlg-de">' + esc(z.de) + '</div>'
+      : '<div class="dlg-de" style="font-style:italic; opacity:.6;">— verdeckt, zum Aufdecken anhören —</div>';
+    return '<div class="dlg-line' + seite + '">' +
+      '<div class="dlg-bubble">' +
+        '<div class="dlg-sprecher">' + esc(z.s === 'A' ? 'Person 1' : 'Person 2') + '</div>' +
+        inhalt +
+        '<button class="dlg-play" onclick="dialogHoerenAufdecken(' + i + ')" aria-label="Anhören und aufdecken">▷</button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  html += dialogQuizTrailerHtml();
+  body.innerHTML = html;
+}
+
+function dialogHoerenAufdecken(i){
+  var d = aktuellerDialog;
+  if(!d || !d.zeilen[i]) return;
+  dialogHoerenAufgedeckt[i] = true;
+  speak(d.zeilen[i].ar);
+  renderDialogHoeren();
+}
+
+function renderDialogRollenspiel(){
+  var d = aktuellerDialog;
+  var body = document.getElementById('dialog-body');
+  var html = '<div class="dlg-intro">Person 1 spricht die App — baue die Antwort von Person 2 aus den Wort-Kacheln.</div>';
+  html += d.zeilen.map(function(z, i){
+    if(z.s === 'A'){
+      return '<div class="dlg-line">' +
+        '<div class="dlg-bubble">' +
+          '<div class="dlg-sprecher">Person 1</div>' +
+          '<div class="dlg-ar">' + esc(z.ar) + '</div>' +
+          '<div class="dlg-tr">' + esc(z.tr) + '</div>' +
+          '<div class="dlg-de">' + esc(z.de) + '</div>' +
+          '<button class="dlg-play" onclick="speakDialogZeile(' + d.id + ',' + i + ')" aria-label="Anhören">▷</button>' +
+        '</div>' +
+      '</div>';
+    }
+    var woerter = dialogZeileWoerter(z.ar);
+    var reihenfolge = dialogRollenspielShuffle[i] || (dialogRollenspielShuffle[i] = shuffle(woerter.map(function(_, wi){ return wi; })));
+    var soweit = dialogRollenspielOrder[i] || [];
+    var fertig = soweit.length === woerter.length;
+    var inhalt = fertig
+      ? ('<div class="dlg-ar">' + esc(z.ar) + '</div><div class="dlg-tr">' + esc(z.tr) + '</div><div class="dlg-de">' + esc(z.de) + '</div>')
+      : ('<div class="silben-antwort" id="dlg-antwort-' + i + '" lang="ar" dir="rtl">' + esc(woerter.slice(0, soweit.length).join(' ')) + '</div>' +
+         '<div class="silben-pool">' +
+           reihenfolge.map(function(wi){
+             var schonDran = soweit.indexOf(wi) !== -1;
+             return '<button class="silben-kachel' + (schonDran ? ' correct' : '') + '" ' + (schonDran ? 'disabled' : '') +
+               ' onclick="dlgRollenspielTippe(' + i + ',' + wi + ', this)" lang="ar" dir="rtl">' + esc(woerter[wi]) + '</button>';
+           }).join('') +
+         '</div>');
+    return '<div class="dlg-line b">' +
+      '<div class="dlg-bubble">' +
+        '<div class="dlg-sprecher">Person 2 — du</div>' +
+        inhalt +
+      '</div>' +
+    '</div>';
+  }).join('');
+  html += dialogQuizTrailerHtml();
+  body.innerHTML = html;
+}
+
+function dlgRollenspielTippe(zeilenIdx, wi, btn){
+  var d = aktuellerDialog;
+  var z = d.zeilen[zeilenIdx];
+  var woerter = dialogZeileWoerter(z.ar);
+  var arr = dialogRollenspielOrder[zeilenIdx] || (dialogRollenspielOrder[zeilenIdx] = []);
+  var erwartet = arr.length;
+  if(wi === erwartet){
+    arr.push(wi);
+    btn.classList.add('correct'); btn.disabled = true;
+    var anzeige = document.getElementById('dlg-antwort-' + zeilenIdx);
+    if(anzeige) anzeige.textContent = woerter.slice(0, arr.length).join(' ');
+    if(arr.length === woerter.length){
+      speak(z.ar);
+      setTimeout(function(){ renderDialogRollenspiel(); }, 900);
+    }
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
+  }
 }
 
 function speakDialogZeile(dialogId, zeilenIdx){
@@ -812,16 +950,75 @@ function toggleDialogHilfe(){
   if(btn) btn.textContent = body.classList.contains('hide-help') ? 'Übersetzung einblenden' : 'Übersetzung ausblenden';
 }
 
+// AP 2.2: 2 Kachel-Satz-Produktionsfragen pro Dialog, live aus den
+// Dialogzeilen abgeleitet (kein zusätzliches Datenerfassen nötig — trägt
+// automatisch auch alle künftigen Dialoge). Je 1 Distraktor-Kachel, die
+// garantiert kein Teil der Lösung ist.
+function kachelsatzFragenAusDialog(d, anzahl){
+  var kandidaten = d.zeilen.filter(function(z){ return dialogZeileWoerter(z.ar).length >= 2; });
+  var gewaehlt = shuffle(kandidaten.slice()).slice(0, anzahl);
+  var alleWoerter = [];
+  d.zeilen.forEach(function(z){ dialogZeileWoerter(z.ar).forEach(function(w){ alleWoerter.push(w); }); });
+  return gewaehlt.map(function(z){
+    var woerter = dialogZeileWoerter(z.ar);
+    var vokForms = (typeof ALLE_VOKABELN !== 'undefined') ? ALLE_VOKABELN.map(function(v){ return v.arabic; }) : [];
+    var kandidatenDistraktor = shuffle(FUNKTIONSWOERTER.concat(alleWoerter, vokForms).filter(function(w){ return woerter.indexOf(w) === -1; }));
+    var distraktor = kandidatenDistraktor[0];
+    return { typ:'kachelsatz', frage:'Baue den Satz aus den Kacheln', woerter:woerter, distraktor:distraktor, tr:z.tr, de:z.de, ar:z.ar };
+  });
+}
+
 function startDialogQuiz(){
   exerciseReturnView = 'dialog';
   if(!aktuellerDialog) return;
-  exam.fragen = shuffle(aktuellerDialog.fragen).map(function(f){
+  var mcFragen = shuffle(aktuellerDialog.fragen).map(function(f){
     return { typ:f.typ, frage:f.frage, glyph:f.glyph, richtig:f.richtig,
       optionen: shuffle(f.optionen.slice()), audio:(f.typ === 'wort') ? f.glyph : f.richtig };
   });
+  var kachelFragen = kachelsatzFragenAusDialog(aktuellerDialog, 2);
+  exam.fragen = shuffle(mcFragen.concat(kachelFragen));
   exam.index = 0; exam.richtig = 0; exam.aktiv = true; exam.mode = 'dialog';
   go('exercise');
   renderExamQuestion();
+}
+
+function renderKachelsatzFrage(q){
+  var body = document.getElementById('exercise-body');
+  var pct = Math.round((exam.index / exam.fragen.length) * 100);
+  dialogKachelsatzReihenfolge = [];
+  var reihenfolge = shuffle(q.woerter.map(function(_, i){ return i; }).concat(['d']));
+  body.innerHTML =
+    '<div class="ex-progress"><div class="ex-progress-bar" style="width:' + pct + '%"></div></div>' +
+    '<div class="ex-question">' + esc(q.frage) + ' — „' + esc(q.de) + '"</div>' +
+    '<div class="silben-antwort" id="dlg-kachelsatz-antwort" lang="ar" dir="rtl"></div>' +
+    '<div class="silben-pool" id="dlg-kachelsatz-pool">' +
+      reihenfolge.map(function(i){
+        var wort = (i === 'd') ? q.distraktor : q.woerter[i];
+        return '<button class="silben-kachel" data-i="' + i + '" onclick="dlgKachelsatzTippe(\'' + i + '\', this)" lang="ar" dir="rtl">' + esc(wort) + '</button>';
+      }).join('') +
+    '</div>' +
+    '<div class="ex-feedback" id="ex-feedback" role="status" aria-live="polite"></div>';
+}
+
+var dialogKachelsatzReihenfolge = [];
+function dlgKachelsatzTippe(i, btn){
+  var q = exam.fragen[exam.index];
+  var erwartet = dialogKachelsatzReihenfolge.length;
+  if(i !== 'd' && parseInt(i, 10) === erwartet){
+    dialogKachelsatzReihenfolge.push(q.woerter[erwartet]);
+    btn.classList.add('correct'); btn.disabled = true;
+    document.getElementById('dlg-kachelsatz-antwort').textContent = dialogKachelsatzReihenfolge.join(' ');
+    if(dialogKachelsatzReihenfolge.length === q.woerter.length){
+      var fb = document.getElementById('ex-feedback');
+      fb.textContent = 'Richtig ✦ — ' + q.tr; fb.className = 'ex-feedback good';
+      exam.richtig++;
+      speak(q.ar);
+      setTimeout(function(){ exam.index++; renderExamQuestion(); }, 1400);
+    }
+  } else {
+    btn.classList.add('wrong');
+    setTimeout(function(){ btn.classList.remove('wrong'); }, 350);
+  }
 }
 
 
@@ -960,6 +1157,7 @@ function renderExamQuestion(){
   var q = exam.fragen[exam.index];
   if(q.typ === 'schreiben'){ renderExamSchreibenFrage(q); return; }
   if(q.typ === 'silben'){ renderSilbenFrage(q); return; }
+  if(q.typ === 'kachelsatz'){ renderKachelsatzFrage(q); return; }
   var pct = Math.round((exam.index / exam.fragen.length) * 100);
   var glyphSize = (q.typ === 'wort') ? 'style="font-size:clamp(3.5rem, 16vw, 6rem);"' : '';
   var cols = (q.typ === 'wort') ? 'style="grid-template-columns:1fr;"' : '';

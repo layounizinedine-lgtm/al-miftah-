@@ -347,6 +347,15 @@
   .write-mode-btn.active{ background: rgba(201,162,39,0.18); border-color: var(--gold-bright); color: var(--gold-bright); }
   .write-stroke-info{ font-family:'Cormorant Garamond', serif; font-style:italic; font-size:.85rem; color: rgba(242,232,208,0.55); margin-top:.5rem; }
 
+  /* AP 2.2: Dialog-Modus-Umschalter — gleiche Optik wie .write-mode-btn */
+  .dlg-mode-btn{
+    background:transparent; border:1px solid rgba(201,162,39,0.35); color: rgba(242,232,208,0.75);
+    border-radius:20px; padding:.4rem 1rem; font-family:'Cormorant Garamond', serif; font-size:.95rem;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
+  }
+  .dlg-mode-btn:hover{ border-color: var(--gold-bright); color:#fdf8ec; }
+  .dlg-mode-btn.active{ background: rgba(201,162,39,0.18); border-color: var(--gold-bright); color: var(--gold-bright); }
+
   .write-stage{
     position:relative; width:min(88vw, 320px); height:min(88vw, 320px);
     margin: 1rem auto; border:1px solid rgba(201,162,39,0.3); border-radius:10px;

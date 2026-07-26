@@ -91,6 +91,55 @@ var DIALOGE = [
         richtig:'عَفْوًا', optionen:['عَفْوًا','شُكْرًا','نَعَمْ','أَهْلًا'] }
     ]}
 ];
+/* ============================================================
+   WORTABDECKUNG (AP 2.2) — jedes Dialogwort muss entweder im
+   Vokabular (ALLE_VOKABELN) oder in dieser bewusst kuratierten
+   Funktionswörter-/Eigennamen-Liste stehen. Kein Lemmatisierer:
+   exakte Oberflächenformen, wie sie in den Dialogen vorkommen —
+   das verhindert unbemerkt "erfundenen" Wortschatz, prüft aber
+   keine Grammatik. Neue Dialoge dürfen nur bereits gelistete
+   Formen oder maximal 2 neue Vokabeln pro Dialog verwenden; jede
+   neue Funktionsform kommt bewusst hierher.
+   ============================================================ */
+var FUNKTIONSWOERTER = [
+  // Pronomen & Demonstrativa
+  'أَنَا','أَنْتَ','هُوَ','هِيَ','هَذَا','هَذِهِ','وَأَنْتَ','وَمَنْ',
+  // Fragewörter & Partikeln
+  'أَيْنَ','وَأَيْنَ','كَيْفَ','مَنْ','مَا','هَلْ','مِنْ','مَعَ','عَلَى','فِي','نَعَمْ',
+  // Grußformeln & feste Ausdrücke
+  'السَّلَامُ','وَعَلَيْكُمُ','عَلَيْكُمْ','السَّلَامَةِ','الْحَمْدُ','لِلَّهِ','تَشَرَّفْنَا','هَيَّا','بِنَا',
+  // Gebundene Formen mit Possessiv-/Präpositionssuffix — echte Vokabeln mit
+  // angehängtem Pronomen/Artikel, hier bewusst als Ganzes gelistet, solange
+  // es noch keine eigene Grammatik-Lektion für Suffixe gibt.
+  'اسْمُكَ','اِسْمِي','اِسْمُهُ','حَالُكَ','بِخَيْرٍ','عِنْدَكَ','بَيْتُكُمْ','بَيْتُنَا','أَخِي','أُخْتِي','أُمِّي',
+  'الصَّفِّ','الطَّاوِلَةِ','الْجَمِيلُ','الْمَطْبَخِ','الْمُعَلِّمُ','الْمِفْتَاحُ','لِلْمُعَلِّمِ','وَكِتَابٌ','طَالِبَةٌ','جَزِيلًا',
+  // Eigennamen
+  'أَحْمَدُ','كَرِيمٌ','عُمَرُ','مِصْرَ','أَلْمَانْيَا'
+];
+
+// Zerlegt eine Dialogzeile in Wörter (Satzzeichen entfernt).
+function dialogZeileWoerter(ar){
+  return ar.replace(/[؟!.،]/g, '').split(/\s+/).filter(Boolean);
+}
+
+// Liefert alle Dialogwörter, die weder im Vokabular noch in der
+// Funktionswörter-Liste stehen — leer heißt: vollständige Abdeckung.
+function dialogWortAbdeckungLuecken(){
+  var vokSet = {};
+  (typeof ALLE_VOKABELN !== 'undefined' ? ALLE_VOKABELN : []).forEach(function(v){ vokSet[v.arabic] = 1; });
+  var funkSet = {};
+  FUNKTIONSWOERTER.forEach(function(w){ funkSet[w] = 1; });
+  var luecken = [];
+  DIALOGE.forEach(function(d){
+    d.zeilen.forEach(function(z){
+      dialogZeileWoerter(z.ar).forEach(function(w){
+        if(!vokSet[w] && !funkSet[w]) luecken.push({ dialogId:d.id, wort:w });
+      });
+    });
+  });
+  return luecken;
+}
+
 var aktuellerDialog = null;
 var DIALOG_DONE_KEY = 'almiftah_dialoge_done';
 function loadDialogeDone(){

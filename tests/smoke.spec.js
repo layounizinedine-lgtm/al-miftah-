@@ -893,3 +893,92 @@ test('AP 2.1: Kapitel-/Lektionsstruktur Stufe 2 — Gating, Erstkontakt-SRS, Bes
 
   expect(errors).toEqual([]);
 });
+
+test('AP 2.2: Dialog-Wortabdeckung lückenlos (jedes Wort ∈ Vokabular ∪ Funktionswörter)', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+
+  const luecken = await page.evaluate(() => dialogWortAbdeckungLuecken());
+  expect(luecken).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('AP 2.2: Dialog-Modi (Lesen/Hören/Rollenspiel) funktionieren', async ({ page }) => {
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+  await page.evaluate(() => document.body.click());
+
+  const lesen = await page.evaluate(() => {
+    go('stufe2');
+    openDialog(0);
+    return { mode: dialogMode, hatQuizButton: document.getElementById('dialog-body').innerHTML.includes('Quiz starten') };
+  });
+  expect(lesen.mode).toBe('lesen');
+  expect(lesen.hatQuizButton).toBeTruthy();
+
+  const hoeren = await page.evaluate(() => {
+    setDialogMode('hoeren');
+    const verdecktVorher = document.getElementById('dialog-body').innerHTML.includes('verdeckt');
+    dialogHoerenAufdecken(0);
+    const sichtbareZeilenNachher = document.querySelectorAll('#dialog-body .dlg-ar').length;
+    return { verdecktVorher, sichtbareZeilenNachher };
+  });
+  expect(hoeren.verdecktVorher).toBeTruthy();
+  expect(hoeren.sichtbareZeilenNachher).toBe(1); // genau die eine aufgedeckte Zeile
+
+  const rollenspiel = await page.evaluate(async () => {
+    setDialogMode('rollenspiel');
+    const d = aktuellerDialog;
+    const bZeileIdx = d.zeilen.findIndex((z) => z.s === 'B');
+    const woerter = dialogZeileWoerter(d.zeilen[bZeileIdx].ar);
+    for (let wi = 0; wi < woerter.length; wi++) {
+      const btn = document.querySelector('.silben-kachel[onclick*="dlgRollenspielTippe(' + bZeileIdx + ',' + wi + ',"]');
+      if (!btn) return { fehler: 'Kachel ' + wi + ' fehlt' };
+      btn.click();
+    }
+    await new Promise((r) => setTimeout(r, 1000));
+    return { geloest: document.querySelectorAll('#dialog-body .dlg-ar').length > 0 };
+  });
+  expect(rollenspiel.geloest).toBeTruthy();
+
+  expect(errors).toEqual([]);
+});
+
+test('AP 2.2: Dialog-Quiz mit 5 Fragen inkl. 2 Kachel-Satz-Produktionsfragen', async ({ page }) => {
+  test.setTimeout(30000);
+  const errors = [];
+  await harden(page, errors);
+  await page.goto(APP);
+  await page.waitForTimeout(300);
+  await unlockStufe2(page);
+  await page.evaluate(() => document.body.click());
+
+  const quiz = await page.evaluate(async () => {
+    go('stufe2');
+    openDialog(0);
+    startDialogQuiz();
+    const typen = [];
+    for (let i = 0; i < exam.fragen.length; i++) {
+      const q = exam.fragen[exam.index];
+      typen.push(q.typ);
+      if (q.typ === 'kachelsatz') {
+        for (let wi = 0; wi < q.woerter.length; wi++) {
+          document.querySelector('.silben-kachel[data-i="' + wi + '"]').click();
+        }
+      } else {
+        document.querySelector('.ex-option[data-idx="' + exam.richtigIdx + '"]').click();
+      }
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+    return { typen, richtig: exam.richtig, n: exam.fragen.length };
+  });
+  expect(quiz.n).toBe(5);
+  expect(quiz.typen.filter((t) => t === 'kachelsatz').length).toBe(2);
+  expect(quiz.richtig).toBe(5);
+  expect(errors).toEqual([]);
+});
